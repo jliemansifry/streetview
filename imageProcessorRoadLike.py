@@ -25,23 +25,18 @@ class ColorDescriptor(object):
 
         # segments = [(0, 240, 0, 180), (240)]
         # top = np.array([[0,0], [640,0], [640, 220], [0, 220]])
-        # bottom_left = np.array([[0, 220], [320, 220], [240, 400], [0, 400]])
-        # center_road = np.array([[320,220], [240, 400], [320, 400]])
-        # bottom_right = np.array([[320,220], [640, 220], [640, 400], [400, 400]])
-        # segments = [top, bottom_left, center_road, bottom_right]
-        # construct an elliptical mask representing the center of the
-        # image
-        # (axesX, axesY) = (int(w * 0.75) / 2, int(h * 0.75) / 2)
-        # ellipMask = np.zeros(image.shape[:2], dtype = "uint8")
-        # cv2.ellipse(ellipMask, (cX, cY), (axesX, axesY), 0, 0, 360, 255, -1)
+        bottom_left = np.array([[0, 220], [320, 220], [240, 400], [0, 400]])
+        center_road = np.array([[320,220], [240, 400], [400, 400]])
+        bottom_right = np.array([[320,220], [640, 220], [640, 400], [400, 400]])
+        segments = [bottom_left, center_road, bottom_right]
  
         # loop over the segments
-        for (startX, endX, startY, endY) in segments:
+        for points in segments:
             # construct a mask for each corner of the image, subtracting
             # image_quarter = np.zeros(image.shape[:2], dtype = "uint8")
             image_split = np.zeros(image.shape[:2], dtype = "uint8")
-            cv2.rectangle(image_split, (startX, startY), (endX, endY), 255, -1)
-            # cv2.polylines(image_split, [points],isClosed = True, color = 255)x
+            # cv2.rectangle(image_split, (startX, startY), (endX, endY), 255, -1)
+            cv2.fillPoly(image_split, [points], color = 255)
             # image_quarter = cv2.subtract(image_quarter, ellipMask)
  
             # extract a color histogram from the image, then update the
