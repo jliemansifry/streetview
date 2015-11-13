@@ -88,7 +88,7 @@ def sklearn_hog(img_name):
     # im = Image.open(img_name)
     # greyscale = im.convert('1')
     greyscale = color.rgb2gray(cv2_image(img_name))
-    fd, hog_image = hog(greyscale, orientations=8, pixels_per_cell=(8, 8), cells_per_block=(1, 1), visualise=True, normalise = True)
+    fd, hog_image = hog(greyscale, orientations=8, pixels_per_cell=(8, 8), cells_per_block=(4, 4), visualise=True, normalise = True)
     return fd, hog_image
 
 
