@@ -2,3 +2,6 @@ images/*
 no_heading_images/*
 data/*
 small_data_subset/*
+small_data_subset
+*.pyc*
+*.log
