@@ -67,7 +67,3 @@ class ColorDescriptor(object):
         hist = cv2.calcHist([image], [0, 1, 2], mask, self.bins, [0, 180, 0, 256, 0, 256])
         hist = cv2.normalize(hist).flatten()
         return hist
-
-image_test = cv2.imread('no_heading_images/lat_40.75376,long_-108.812no_heading.png')
-# cd = ColorDescriptor((8, 12, 3))
-# t = cd.describe(image_test)
