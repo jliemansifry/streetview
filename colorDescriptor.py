@@ -1,4 +1,8 @@
 import numpy as np
+from mpl_toolkits.pyplot import axis3d
+from matplotlib.colors import hsv_to_rgb
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
 import cv2
 
 class ColorDescriptor(object):
@@ -67,3 +71,71 @@ class ColorDescriptor(object):
         hist = cv2.calcHist([image], [0, 1, 2], mask, self.bins, [0, 180, 0, 256, 0, 256])
         hist = cv2.normalize(hist).flatten()
         return hist
+
+    def show_color_histogram(self, image):
+        ''' Show the 2d histogram. '''
+        hsv_map = np.zeros((180, 256, 3), np.uint8)
+        # hsv_map = np.zeros((360, 512, 3), np.uint8) # maybe to make bigger later?
+        h, s = np.indices(hsv_map.shape[:2])
+        hsv_map[:,:,0] = h
+        hsv_map[:,:,1] = s
+        hsv_map[:,:,2] = 255
+        hsv_map = cv2.cvtColor(hsv_map, cv2.COLOR_HSV2BGR)
+        # cv2.imshow('hsv_map', hsv_map)
+        cv2.namedWindow('hist', 0)
+        hist_scale = 5
+        # cv2.imshow('image', image)
+        # image = cv2.pyrDown(image) # downsample image, if desired
+        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        dark = hsv[...,2] < 32
+        hsv[dark] = 0
+        h = cv2.calcHist( [hsv], [0, 1], None, [180, 256], [0, 180, 0, 256] )
+        # h = cv2.calcHist([hsv], [0, 1], None, [360, 512], [0, 360, 0, 512])
+        h = np.clip(h*0.005*hist_scale, 0, 1)
+        vis = hsv_map*h[:,:,np.newaxis] / 255.0
+        cv2.imshow('hist', vis)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+    
+    def plot3d_hist(self, image):
+        ''' Plot a sampling of the colors of the image in HSV space (in 3d). 
+        'hsv' gives the location of pixels in HSV color space, and 'rgb' 
+        keeps track of the colors of these pixels for plotting
+        in matplotlib. '''
+        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB) / 255.0
+        (h, w) = image.shape[:2]
+        num_pixels = h * w
+        rgb = rgb.reshape(num_pixels, 3)
+        hue = np.ravel(hsv[:, :, 0]).reshape(num_pixels, 1)
+        sat = np.ravel(hsv[:, :, 1]).reshape(num_pixels, 1)
+        val = np.ravel(hsv[:, :, 2]).reshape(num_pixels, 1)
+        # convert HSV values from cylindrical space (ie. theta, r, z) 
+        # to x, y, z for matplotlib 3d scatter plot
+        x = sat * np.cos(np.radians(hue))
+        y = sat * np.sin(np.radians(hue))
+        z = val
+        # fig = plt.figure()
+        # ax = fig.add_subplot(111, projection = '3d')
+        fig = plt.figure(1)
+        # ax = Axes3D(fig, elev=43.5, azim = -110)
+        ax = axis3d(fig, elev=43.5, azim = -110)
+        # for a in ax.w_xaxis.get_ticklines()+ax.w_xaxis.get_ticklabels(): 
+        #     a.set_visible(False) 
+        # for axis in ax:
+            # plt.setp(ax.get)
+        # ax.set_xlabel([]); ax.set_ylabel([]); ax.set_zlabel([]); 
+        # ax.set_xticks([]); ax.set_yticks([]); ax.set_zticks([]); 
+        ax.scatter(x[::100], y[::100], z[::100], color = rgb[::100])
+        # ax.set_xticks([])
+        # ax.axis('off')
+        ax.w_xaxis.set_ticklabels([])
+        ax.w_yaxis.set_ticklabels([])
+        ax.w_zaxis.set_ticklabels([])
+        # plt.gca().xaxis.set_major_locator(plt.NullLocator())
+        # ax.set_xlabel([]); ax.set_ylabel([]); ax.set_zlabel([]); 
+        # ax.set_xticks([]); ax.set_yticks([]); ax.set_zticks([]); 
+        # for a in ax.w_xaxis.get_ticklines()+ax.w_xaxis.get_ticklabels(): 
+            # a.set_visible(False) 
+        plt.show()
+        
