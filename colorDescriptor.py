@@ -96,7 +96,7 @@ class ColorDescriptor(object):
         cv2.waitKey(0)
         cv2.destroyAllWindows()
     
-    def plot3d_hist(self, image, subsample = 200):
+    def plot3d_hsv(self, image, subsample = 200, show = True, base_ax = None, alpha = 0.7):
         ''' Plot a sampling of the colors of the image in HSV space (in 3d). 
         'hsv' gives the location of pixels in HSV color space, and 'rgb' 
         keeps track of the colors of these pixels for plotting
@@ -115,10 +115,18 @@ class ColorDescriptor(object):
         x = sat * np.cos(np.radians(hue) * 2)
         y = sat * np.sin(np.radians(hue) * 2)
         z = val
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection = '3d')
-        ax.scatter(x[::subsample], y[::subsample], z[::subsample], color = rgb[::subsample])
-        ax.set_xticks([]); ax.set_yticks([]); ax.set_zticks([]); 
-        ax.w_xaxis.set_ticklabels([]); ax.w_yaxis.set_ticklabels([]); ax.w_zaxis.set_ticklabels([])
-        plt.show()
-        
+        if base_ax is None: 
+            ''' Set up fig and ax if nothing is given. Otherwise, overplot the new image
+            on the previous one. If show == True, nothing will be returned. '''
+            fig = plt.figure()
+            ax = fig.add_subplot(111, projection = '3d')
+            ax.set_xticks([]); ax.set_yticks([]); ax.set_zticks([]); 
+            ax.w_xaxis.set_ticklabels([]); ax.w_yaxis.set_ticklabels([]); ax.w_zaxis.set_ticklabels([])
+            ax.scatter(x[::subsample], y[::subsample], z[::subsample], color = rgb[::subsample], marker = "s", alpha = alpha)
+        else: 
+            ax = base_ax
+            ax.scatter(x[::subsample], y[::subsample], z[::subsample], color = rgb[::subsample], marker = '*', alpha = alpha)
+        if show:
+            plt.show()
+        else:
+            return ax
