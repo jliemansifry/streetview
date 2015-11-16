@@ -1,5 +1,4 @@
 import numpy as np
-from mpl_toolkits.pyplot import axis3d
 from matplotlib.colors import hsv_to_rgb
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
@@ -97,7 +96,7 @@ class ColorDescriptor(object):
         cv2.waitKey(0)
         cv2.destroyAllWindows()
     
-    def plot3d_hist(self, image):
+    def plot3d_hist(self, image, subsample = 200):
         ''' Plot a sampling of the colors of the image in HSV space (in 3d). 
         'hsv' gives the location of pixels in HSV color space, and 'rgb' 
         keeps track of the colors of these pixels for plotting
@@ -107,35 +106,19 @@ class ColorDescriptor(object):
         (h, w) = image.shape[:2]
         num_pixels = h * w
         rgb = rgb.reshape(num_pixels, 3)
-        hue = np.ravel(hsv[:, :, 0]).reshape(num_pixels, 1)
+        hue = np.ravel(hsv[:, :, 0]).reshape(num_pixels, 1) 
         sat = np.ravel(hsv[:, :, 1]).reshape(num_pixels, 1)
         val = np.ravel(hsv[:, :, 2]).reshape(num_pixels, 1)
+        
         # convert HSV values from cylindrical space (ie. theta, r, z) 
         # to x, y, z for matplotlib 3d scatter plot
-        x = sat * np.cos(np.radians(hue))
-        y = sat * np.sin(np.radians(hue))
+        x = sat * np.cos(np.radians(hue) * 2)
+        y = sat * np.sin(np.radians(hue) * 2)
         z = val
-        # fig = plt.figure()
-        # ax = fig.add_subplot(111, projection = '3d')
-        fig = plt.figure(1)
-        # ax = Axes3D(fig, elev=43.5, azim = -110)
-        ax = axis3d(fig, elev=43.5, azim = -110)
-        # for a in ax.w_xaxis.get_ticklines()+ax.w_xaxis.get_ticklabels(): 
-        #     a.set_visible(False) 
-        # for axis in ax:
-            # plt.setp(ax.get)
-        # ax.set_xlabel([]); ax.set_ylabel([]); ax.set_zlabel([]); 
-        # ax.set_xticks([]); ax.set_yticks([]); ax.set_zticks([]); 
-        ax.scatter(x[::100], y[::100], z[::100], color = rgb[::100])
-        # ax.set_xticks([])
-        # ax.axis('off')
-        ax.w_xaxis.set_ticklabels([])
-        ax.w_yaxis.set_ticklabels([])
-        ax.w_zaxis.set_ticklabels([])
-        # plt.gca().xaxis.set_major_locator(plt.NullLocator())
-        # ax.set_xlabel([]); ax.set_ylabel([]); ax.set_zlabel([]); 
-        # ax.set_xticks([]); ax.set_yticks([]); ax.set_zticks([]); 
-        # for a in ax.w_xaxis.get_ticklines()+ax.w_xaxis.get_ticklabels(): 
-            # a.set_visible(False) 
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection = '3d')
+        ax.scatter(x[::subsample], y[::subsample], z[::subsample], color = rgb[::subsample])
+        ax.set_xticks([]); ax.set_yticks([]); ax.set_zticks([]); 
+        ax.w_xaxis.set_ticklabels([]); ax.w_yaxis.set_ticklabels([]); ax.w_zaxis.set_ticklabels([])
         plt.show()
         
