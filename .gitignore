@@ -3,5 +3,7 @@ no_heading_images/*
 data/*
 small_data_subset/*
 small_data_subset
-*.pyc*
+*.pyc
 *.log
+imageScraper.py
+*coord*
