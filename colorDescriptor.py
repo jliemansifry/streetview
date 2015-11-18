@@ -120,13 +120,16 @@ class ColorDescriptor(object):
             on the previous one. If show == True, nothing will be returned. '''
             fig = plt.figure()
             ax = fig.add_subplot(111, projection = '3d')
-            ax.set_xticks([]); ax.set_yticks([]); ax.set_zticks([]); 
-            ax.w_xaxis.set_ticklabels([]); ax.w_yaxis.set_ticklabels([]); ax.w_zaxis.set_ticklabels([])
+            # ax.set_xticks([]); ax.set_yticks([]); ax.set_zticks([]); 
+            # ax.w_xaxis.set_ticklabels([]); ax.w_yaxis.set_ticklabels([]); ax.w_zaxis.set_ticklabels([])
             ax.scatter(x[::subsample], y[::subsample], z[::subsample], color = rgb[::subsample], marker = "s", alpha = alpha)
         else: 
             ax = base_ax
             ax.scatter(x[::subsample], y[::subsample], z[::subsample], color = rgb[::subsample], marker = '*', alpha = alpha)
         if show:
+            # ax.text(280, 0, 150, "Value", fontsize = 20, zdir = (0,0,1))
+            # ax.text(210, -300, 0, "Hue", fontsize = 20, zdir = (0,0,0))
+            # ax.text2D(.54, .66, "Saturation ->", fontsize = 16, transform = ax.transAxes)
             plt.show()
         else:
             return ax
