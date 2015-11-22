@@ -1,11 +1,11 @@
 from matplotlib import cm
 import random
-import itertools
-import cv2
+# import itertools
+# import cv2
 import pandas as pd
 import numpy as np
-from imageProcessor import ColorDescriptor
-from mpl_toolkits.mplot3d import Axes3D
+# from imageProcessor import ColorDescriptor
+# from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 from imageScraper import save_image, get_date
 from imageAnalysisFunctions import corner_frac, surf, cv2_image, sklearn_hog
@@ -14,6 +14,7 @@ from imageAnalysisFunctions import corner_frac, surf, cv2_image, sklearn_hog
 
 def read_data():
     df = pd.read_csv('big_list_with_filenames.csv')
+    # df = pd.read_csv('big_list_with_road_colorhists.csv')
     return df
 
 def download_images(df):
@@ -22,7 +23,7 @@ def download_images(df):
     as the API maxes out at 2500 images a day (625 total locations,
     NESW for each location)'''
     count = 0
-    for lt, lg in zip(df['lat'][7200:7512], df['lng'][7200:7513]):
+    for lt, lg in zip(df['lat'][7512:7513], df['lng'][7512:7513]):
         for heading in [0, 90, 180, 270]:
             print count
             count += 1
@@ -103,15 +104,67 @@ def write_features(df, cd):
         if 'hist_vec_' + cd.hist_loc + '_' + cardinal_dir not in df.columns:
             df['hist_vec_' + cd.hist_loc + '_' + cardinal_dir] = 0.
             df['hist_vec_' + cd.hist_loc + '_' + cardinal_dir] = df['hist_vec_' + cd.hist_loc + '_' + cardinal_dir].astype(object)
-    for idx in xrange(0, 2):
+    for idx in range(df.shape[0]):
+        print idx
         for cardinal_dir in NESW:
             image_name = df.iloc[idx]['base_filename'] + cardinal_dir + '.png'
             image = cv2_image(image_name)
             ltlg_features = np.array(cd.describe(image))
             df['hist_vec_' + cd.hist_loc + '_' + cardinal_dir][idx] = ltlg_features
 
+def calculate_features_and_determine_closest(df, cd):
+    ''' Write the ColorDescriptor histogram to a column in the dataframe. '''
+    NESW = ['N', 'E', 'S', 'W']
+    for cardinal_dir in NESW:
+        if 'hist_vec_' + cd.hist_loc + '_' + cardinal_dir not in df.columns:
+            df['hist_vec_' + cd.hist_loc + '_' + cardinal_dir] = 0.
+            df['hist_vec_' + cd.hist_loc + '_' + cardinal_dir] = df['hist_vec_' + cd.hist_loc + '_' + cardinal_dir].astype(object)
+    for cardinal_dir in NESW:
+        ltlg_features = None
+        # for idx in range(df.shape[0]):
+        for idx in range(df.shape[0]):
+            print idx
+            image_name = df.iloc[idx]['base_filename'] + cardinal_dir + '.png'
+            image = cv2_image(image_name)
+            if ltlg_features is None:
+                ltlg_features = np.array(cd.describe(image))
+            else:
+                ltlg_features = np.vstack((ltlg_features, cd.describe(image)))
+
+        if 'nearest_10_neighbors_' + cardinal_dir not in df.columns:
+            df['nearest_10_neighbors_' + cardinal_dir] = 0.
+            df['nearest_10_neighbors_' + cardinal_dir] = df['nearest_10_neighbors_' + cardinal_dir].astype(object)
+
+        for idx in range(df.shape[0]):
+            print idx
+            # df['ordered_euclidean_distances_' + cardinal_dir][idx] = np.linalg.norm(ltlg_features[idx] - ltlg_features, axis = 1)
+            df['nearest_10_neighbors_' + cardinal_dir][idx] = np.argsort(np.linalg.norm(ltlg_features[idx] - ltlg_features, axis = 1))[1:11]
+            #df['hist_vec_' + cd.hist_loc + '_' + cardinal_dir][idx] = ltlg_features
+
+
+def calculate_colorhist_euclid_dist(df, hist_loc):
+    NESW = ['N', 'E', 'S', 'W']
+    def chi_sq(histA, histB):
+        # return np.mean(np.square(histA - histB), axis = 1)
+        return np.linalg.norm(histA - histB)
+    for cardinal_dir in NESW:
+        col_of_hists = ['hist_vec_' + hist_loc + '_' + cardinal_dir].values
+        for idx in range(df.shape[0]):
+            hist = df['hist_vec_' + hist_loc + '_' + cardinal_dir][idx]
+            df['ordered_euclidian_distances_' + cardinal_dir][idx] = chi_sq(histA, histB)
+
+    # for idx in range(df.shape[0]):
+        # for cardinal_dir in NESW:
+            # hist = df['hist_vec_' + hist_loc + '_' + cardinal_dir][idx]
+            # df['ordered_euclidian_distances_' + cardinal_dir][idx] = chi_sq(hist, )
+
+def calculate_colorhist_cosine_dist(df):
+    pass
+
 if __name__ == '__main__':
+    # pass
     df = read_data()
     # test = plot_3d(df, style = 'wireframe', show = False)
     # write_filenames(df)
+    # df.to_csv('big_list_with_filenames.csv', index = False)
     # df.to_csv('big_list_with_filenames.csv', index = False)
