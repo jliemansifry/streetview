@@ -97,13 +97,23 @@ def write_filenames(df):
     filename_lng = df.lng.apply(lambda x: str(x)[:8])
     df['base_filename'] = 'data/lat_' + filename_lat + ',long_' + filename_lng + '_'
 
+def check_for_column(column_name, typ = object):
+    ''' Check the dataframe for the presence of the column. Create
+    it and make it of the specified type. '''
+    if column_name not in df.columns:
+        df[column_name] = 0.
+        df[column_name] = df[column_name].astype(typ)
+
 def write_features(df, cd):
-    ''' Write the ColorDescriptor histogram to a column in the dataframe. '''
+    ''' Write the ColorDescriptor histogram to a column in the dataframe.
+    Not worth actually using, as unpacking the feature vectors from each
+    column is a pain, and storing them isn't really necessary. '''
     NESW = ['N', 'E', 'S', 'W']
     for cardinal_dir in NESW:
-        if 'hist_vec_' + cd.hist_loc + '_' + cardinal_dir not in df.columns:
-            df['hist_vec_' + cd.hist_loc + '_' + cardinal_dir] = 0.
-            df['hist_vec_' + cd.hist_loc + '_' + cardinal_dir] = df['hist_vec_' + cd.hist_loc + '_' + cardinal_dir].astype(object)
+        check_for_column('hist_vec_' + cd.hist_loc + '_' + cardinal_dir)
+        # if 'hist_vec_' + cd.hist_loc + '_' + cardinal_dir not in df.columns:
+            # df['hist_vec_' + cd.hist_loc + '_' + cardinal_dir] = 0.
+            # df['hist_vec_' + cd.hist_loc + '_' + cardinal_dir] = df['hist_vec_' + cd.hist_loc + '_' + cardinal_dir].astype(object)
     for idx in range(df.shape[0]):
         print idx
         for cardinal_dir in NESW:
@@ -112,17 +122,16 @@ def write_features(df, cd):
             ltlg_features = np.array(cd.describe(image))
             df['hist_vec_' + cd.hist_loc + '_' + cardinal_dir][idx] = ltlg_features
 
-def calculate_features_and_determine_closest(df, cd):
-    ''' Write the ColorDescriptor histogram to a column in the dataframe. '''
+def calculate_features_and_determine_closest(df, cd, distance_metric = 'euclidean'):
+    ''' Calculate the ColorDescriptor histogram to a column in the dataframe. 
+    Store in a temporary numpy array, calculate the euclidean distance for each
+    pair, and write the indices of the closest 10 images in colorspace by 
+    cardinal direction'''
     NESW = ['N', 'E', 'S', 'W']
-    for cardinal_dir in NESW:
-        if 'hist_vec_' + cd.hist_loc + '_' + cardinal_dir not in df.columns:
-            df['hist_vec_' + cd.hist_loc + '_' + cardinal_dir] = 0.
-            df['hist_vec_' + cd.hist_loc + '_' + cardinal_dir] = df['hist_vec_' + cd.hist_loc + '_' + cardinal_dir].astype(object)
+    all_images_count = df.shape[0]
     for cardinal_dir in NESW:
         ltlg_features = None
-        # for idx in range(df.shape[0]):
-        for idx in range(df.shape[0]):
+        for idx in range(all_images_count):
             print idx
             image_name = df.iloc[idx]['base_filename'] + cardinal_dir + '.png'
             image = cv2_image(image_name)
@@ -130,15 +139,25 @@ def calculate_features_and_determine_closest(df, cd):
                 ltlg_features = np.array(cd.describe(image))
             else:
                 ltlg_features = np.vstack((ltlg_features, cd.describe(image)))
-
-        if 'nearest_10_neighbors_' + cardinal_dir not in df.columns:
-            df['nearest_10_neighbors_' + cardinal_dir] = 0.
-            df['nearest_10_neighbors_' + cardinal_dir] = df['nearest_10_neighbors_' + cardinal_dir].astype(object)
-
-        for idx in range(df.shape[0]):
+        check_for_column('nearest_10_neighbors_' + 'euclidean' + '_' + cardinal_dir)
+        check_for_column('nearest_10_neighbors_' + 'cosine' + '_' + cardinal_dir)
+        
+        all_hist = ltlg_features.reshape(all_images_count, 3*cd.bins[0], cd.bins[1], cd.bins[2])
+        for idx in range(all_images_count):#range(df.shape[0]):
             print idx
             # df['ordered_euclidean_distances_' + cardinal_dir][idx] = np.linalg.norm(ltlg_features[idx] - ltlg_features, axis = 1)
-            df['nearest_10_neighbors_' + cardinal_dir][idx] = np.argsort(np.linalg.norm(ltlg_features[idx] - ltlg_features, axis = 1))[1:11]
+            if distance_metric == 'euclidean':
+            # df['nearest_10_neighbors_' + distance_metric + '_' + cardinal_dir][idx] = np.argsort(np.linalg.norm(ltlg_features[idx] - ltlg_features, axis = 1).sum())[1:11]
+                current_hist = all_hist[idx]
+                distance = np.sqrt(np.square(np.linalg.norm(current_hist - all_hist, axis = 1)).sum(-1).sum(-1))
+                nearest_10_neighbors = np.argsort(distance)[1:11]
+                df['nearest_10_neighbors_' + distance_metric + '_' + cardinal_dir][idx] = nearest_10_neighbors 
+            if distance_metric == 'cosine':
+
+                numerator = np.dot(ltlg_features[idx], ltlg_features.T)
+                denominator = np.linalg.norm(ltlg_features[0]) * np.linalg.norm(ltlg_features, axis = 1)
+                df['nearest_10_neighbors_' + distance_metric + '_' + cardinal_dir][idx] = np.argsort(numerator/denominator)[-11:-1][::-1]
+
             #df['hist_vec_' + cd.hist_loc + '_' + cardinal_dir][idx] = ltlg_features
 
 
