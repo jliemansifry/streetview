@@ -110,10 +110,8 @@ def write_features(df, cd):
     column is a pain, and storing them isn't really necessary. '''
     NESW = ['N', 'E', 'S', 'W']
     for cardinal_dir in NESW:
-        check_for_column('hist_vec_' + cd.hist_loc + '_' + cardinal_dir)
-        # if 'hist_vec_' + cd.hist_loc + '_' + cardinal_dir not in df.columns:
-            # df['hist_vec_' + cd.hist_loc + '_' + cardinal_dir] = 0.
-            # df['hist_vec_' + cd.hist_loc + '_' + cardinal_dir] = df['hist_vec_' + cd.hist_loc + '_' + cardinal_dir].astype(object)
+        column_name = 'hist_vec_' + cd.hist_loc + '_' + cardinal_dir
+        check_for_column(column_name)
     for idx in range(df.shape[0]):
         print idx
         for cardinal_dir in NESW:
@@ -126,10 +124,10 @@ def calculate_features_and_determine_closest(df, cd, distance_metric = 'euclidea
     ''' Calculate the ColorDescriptor histogram to a column in the dataframe. 
     Store in a temporary numpy array, calculate the euclidean distance for each
     pair, and write the indices of the closest 10 images in colorspace by 
-    cardinal direction'''
+    cardinal direction. '''
     NESW = ['N', 'E', 'S', 'W']
     all_images_count = df.shape[0]
-    for cardinal_dir in NESW:
+    for cardinal_dir in NESW[-1]:
         ltlg_features = None
         for idx in range(all_images_count):
             print idx
@@ -139,46 +137,22 @@ def calculate_features_and_determine_closest(df, cd, distance_metric = 'euclidea
                 ltlg_features = np.array(cd.describe(image))
             else:
                 ltlg_features = np.vstack((ltlg_features, cd.describe(image)))
-        check_for_column('nearest_10_neighbors_' + 'euclidean' + '_' + cardinal_dir)
-        check_for_column('nearest_10_neighbors_' + 'cosine' + '_' + cardinal_dir)
-        
-        all_hist = ltlg_features.reshape(all_images_count, 3*cd.bins[0], cd.bins[1], cd.bins[2])
-        for idx in range(all_images_count):#range(df.shape[0]):
-            print idx
-            # df['ordered_euclidean_distances_' + cardinal_dir][idx] = np.linalg.norm(ltlg_features[idx] - ltlg_features, axis = 1)
-            if distance_metric == 'euclidean':
-            # df['nearest_10_neighbors_' + distance_metric + '_' + cardinal_dir][idx] = np.argsort(np.linalg.norm(ltlg_features[idx] - ltlg_features, axis = 1).sum())[1:11]
-                current_hist = all_hist[idx]
-                distance = np.sqrt(np.square(np.linalg.norm(current_hist - all_hist, axis = 1)).sum(-1).sum(-1))
-                nearest_10_neighbors = np.argsort(distance)[1:11]
-                df['nearest_10_neighbors_' + distance_metric + '_' + cardinal_dir][idx] = nearest_10_neighbors 
-            if distance_metric == 'cosine':
-
+        if distance_metric == 'euclidean':
+            column_name = 'nearest_10_neighbors_' + distance_metric + '_' + cardinal_dir
+            check_for_column(column_name)
+            for idx in range(all_images_count):
+                print idx
+                distance = np.linalg.norm(ltlg_features[idx] - ltlg_features, axis = 1)
+                df['nearest_10_neighbors_' + distance_metric + '_' + cardinal_dir][idx] = np.argsort(distance)[1:11]
+        if distance_metric == 'cosine':
+            # turns out cosine distance returns the same 'nearest' images as euclidean distance
+            column_name = 'nearest_10_neighbors_' + distance_metric + '_' + cardinal_dir
+            check_for_column(column_name)
+            for idx in range(all_images_count):
+                print idx
                 numerator = np.dot(ltlg_features[idx], ltlg_features.T)
                 denominator = np.linalg.norm(ltlg_features[0]) * np.linalg.norm(ltlg_features, axis = 1)
                 df['nearest_10_neighbors_' + distance_metric + '_' + cardinal_dir][idx] = np.argsort(numerator/denominator)[-11:-1][::-1]
-
-            #df['hist_vec_' + cd.hist_loc + '_' + cardinal_dir][idx] = ltlg_features
-
-
-def calculate_colorhist_euclid_dist(df, hist_loc):
-    NESW = ['N', 'E', 'S', 'W']
-    def chi_sq(histA, histB):
-        # return np.mean(np.square(histA - histB), axis = 1)
-        return np.linalg.norm(histA - histB)
-    for cardinal_dir in NESW:
-        col_of_hists = ['hist_vec_' + hist_loc + '_' + cardinal_dir].values
-        for idx in range(df.shape[0]):
-            hist = df['hist_vec_' + hist_loc + '_' + cardinal_dir][idx]
-            df['ordered_euclidian_distances_' + cardinal_dir][idx] = chi_sq(histA, histB)
-
-    # for idx in range(df.shape[0]):
-        # for cardinal_dir in NESW:
-            # hist = df['hist_vec_' + hist_loc + '_' + cardinal_dir][idx]
-            # df['ordered_euclidian_distances_' + cardinal_dir][idx] = chi_sq(hist, )
-
-def calculate_colorhist_cosine_dist(df):
-    pass
 
 if __name__ == '__main__':
     # pass
