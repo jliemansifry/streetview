@@ -13,8 +13,9 @@ from imageAnalysisFunctions import corner_frac, surf, cv2_image, sklearn_hog
 # cd = ColorDescriptor((8, 12, 3))
 
 def read_data():
-    df = pd.read_csv('big_list_with_filenames.csv')
+    # df = pd.read_csv('big_list_with_filenames.csv')
     # df = pd.read_csv('big_list_with_road_colorhists.csv')
+    df = pd.read_pickle('big_list_with_nearest_10.pkl')
     return df
 
 def download_images(df):
@@ -63,11 +64,16 @@ def make_hist(cd, img):
     histogram feature vectors will be different lengths. '''
     return cd.describe(img)
 
-def random_file_pull(df):
+def random_file_pull(df, yield_all_info = False):
     ''' Generate a random filename from the database. Good
     for testing different image processing functions. '''
-    base = df.base_filename[np.random.randint(0,len(df))]
-    yield base + random.choice(['N','E','S','W']) + '.png'
+    idx = np.random.randint(0,len(df))
+    direction = random.choice(['N','E','S','W'])
+    base = df.base_filename[idx]
+    if yield_all_info:
+        yield idx, direction, base + direction + '.png'
+    else:
+        yield base + direction + '.png'
 
 def play_with_surf_and_cornerfrac(df):
     ''' Pull 20 images then calculate and show the SURF and corner fraction
@@ -90,6 +96,22 @@ def play_hog(df):
         ax2.imshow(hog_img)
         plt.show()
     return hog_img
+
+def play_color_likeness(df):
+    ''' Pull 20 images and show the most similar images 
+    as found by euclidean distance from their color histograms'''
+    some_random_files = [random_file_pull(df, yield_all_info = True).next() for _ in range(20)]
+    for img_info_tuple in some_random_files:
+        plt.clf()
+        fig = plt.figure(figsize = (16,8))
+        ax = fig.add_subplot(1,2,1)
+        ax.imshow(cv2_image(img_info_tuple[2]))
+        ax2 = fig.add_subplot(1,2,2)
+        column_direction = 'nearest_10_neighbors_euclidean_' + img_info_tuple[1]
+        nearest_image_idx = df[column_direction][img_info_tuple[0]][0]
+        nearest_image = df['base_filename'][nearest_image_idx] + img_info_tuple[1] + '.png'
+        ax2.imshow(cv2_image(nearest_image))
+        plt.show()
 
 def write_filenames(df):
     ''' Used to write the base filenames for each location.'''
