@@ -68,8 +68,7 @@ class ColorDescriptor(object):
         at the given resolution of bins per channel. Normalize the histogram,
         flatten it to a 1D array, and return it.'''
         hist = cv2.calcHist([image], [0, 1, 2], mask, self.bins, [0, 180, 0, 256, 0, 256])
-        hist = cv2.normalize(hist).flatten()
-        return hist
+        return cv2.normalize(hist).flatten()
 
     def show_color_histogram(self, image):
         ''' Show the 2d histogram. '''
