@@ -88,7 +88,7 @@ def play_hog(df):
     some_random_files = [random_file_pull(df).next() for _ in range(20)]
     for img_name in some_random_files:
         features, hog_img = sklearn_hog(img_name)
-        plt.clf()
+        # plt.clf()
         fig = plt.figure(figsize = (16,8))
         ax = fig.add_subplot(1,2,1)
         ax.imshow(cv2_image(img_name))
@@ -102,16 +102,53 @@ def play_color_likeness(df):
     as found by euclidean distance from their color histograms'''
     some_random_files = [random_file_pull(df, yield_all_info = True).next() for _ in range(20)]
     for img_info_tuple in some_random_files:
-        plt.clf()
+        source_idx = img_info_tuple[0]
+        direction = img_info_tuple[1]
+        filename = img_info_tuple[2]
+        column_direction = 'nearest_10_neighbors_euclidean_' + direction
+        nearest_image_idx = df[column_direction][source_idx][0]
+        nearest_image = df['base_filename'][nearest_image_idx] + direction + '.png'
+        print "original image location is {}, {}".format(df['lat'][source_idx], df['lng'][source_idx])
+        print "new image location is {}, {}".format(df['lat'][nearest_image_idx], df['lng'][nearest_image_idx])
+        print "the indices in the df are {} and {}".format(source_idx, nearest_image_idx)
+        print "\n"
+
         fig = plt.figure(figsize = (16,8))
-        ax = fig.add_subplot(1,2,1)
-        ax.imshow(cv2_image(img_info_tuple[2]))
-        ax2 = fig.add_subplot(1,2,2)
-        column_direction = 'nearest_10_neighbors_euclidean_' + img_info_tuple[1]
-        nearest_image_idx = df[column_direction][img_info_tuple[0]][0]
-        nearest_image = df['base_filename'][nearest_image_idx] + img_info_tuple[1] + '.png'
+        ax = fig.add_subplot(2,2,1)
+        ax.imshow(cv2_image(filename))
+        ax2 = fig.add_subplot(2,2,2)
         ax2.imshow(cv2_image(nearest_image))
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax2.set_xticks([])
+        ax2.set_yticks([])
+        ax3 = fig.add_subplot(2,2,3)
+
+        nearest_10 = find_locations_nearest_10(source_idx, direction)
+        true_loc = df['lat'][source_idx], df['lng'][source_idx]
+        ax3.scatter(nearest_10[2:,1], nearest_10[2:,0])#, label = 'rest of top 10')
+        ax3.scatter(true_loc[1], true_loc[0], color = '#33FFFF', label = 'true loc', s = 30)
+        ax3.scatter(nearest_10[0][1], nearest_10[0][0], color = '#00FF00', label = 'best guess', s = 30)
+        # ax3.legend(bbox_to_anchor=(-.5, 1.0))
+        ax3.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=2, mode="expand", borderaxespad=0.)
+        ax4 = fig.add_subplot(2,2,4)
+        ax4.scatter(df['lng'][::10], df['lat'][::10])
+        ax3.set_xlabel("Longitude")
+        ax3.set_ylabel("Latitude")
+        ax4.set_xlabel("Longitude")
+        ax4.set_ylabel("Latitude")
+        ax3.set_xlim(-109.5, -102.5)
+        ax3.set_ylim(37, 41)
+        ax4.set_xlim(-109.5, -102.5)
+        ax4.set_ylim(37, 41)
+
         plt.show()
+
+def find_locations_nearest_10(source_idx, direction):
+    column_direction = 'nearest_10_neighbors_euclidean_' + direction
+    nearest_image_idx = df[column_direction][source_idx]
+    nearest_locs = np.array([(df['lat'][idx], df['lng'][idx]) for idx in nearest_image_idx])
+    return nearest_locs
 
 def write_filenames(df):
     ''' Used to write the base filenames for each location.'''
