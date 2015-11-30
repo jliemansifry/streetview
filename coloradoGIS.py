@@ -31,3 +31,16 @@ lt, lg = m(-105.5, 39) # test overplot a point
 m.plot(lt, lg, 'bo', markersize = 24)
 plt.show()
 
+
+import fiona
+fc = fiona.open("Shape/GU_CountyOrEquivalent.shp")
+# county_names = [fc[i]['properties']['COUNTY_NAM'] for i in range(len(fc)) if fc[i]['properties']['STATE_NAME'] == 'Colorado']
+county_name_and_shape = [(fc[i]['properties']['COUNTY_NAM'], fc[i]['geometry']) for i in range(len(fc)) if fc[i]['properties']['STATE_NAME'] == 'Colorado']
+
+def find_which_county(coord):
+    for county_name, county_shape in county_name_and_shape:
+        sh = shapely.geometry.asShape(county_shape)
+        if sh.contains(shapely.geometry.Point(coord)):
+            return county_name
+        else:
+            continue
