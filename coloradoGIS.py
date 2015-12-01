@@ -1,11 +1,11 @@
 import pandas as pd
+from mpl_toolkits.basemap import Basemap
 from pyproj import Proj, transform
 import fiona
 from fiona.crs import from_epsg
 import numpy as np
 import matplotlib.pyplot as plt
-import shapely
-from mpl_toolkits.basemap import Basemap
+# import shapely
 import shapefile
 from matplotlib.patches import Polygon, PathPatch
 from matplotlib.collections import PatchCollection, LineCollection
@@ -22,7 +22,6 @@ def plot_shapefile(f, options = 'counties'):
     m.readshapefile(f, name = 'state') # counties
     if options == 'geo':
         rocktypes = np.unique(np.array([m.state_info[i]['ROCKTYPE1'] for i in range(len(m.state_info))]))
-
     for info, shape in zip(m.state_info, m.state):
         if options == 'counties':
             if info['STATE_NAME'] != 'Colorado':
@@ -31,18 +30,23 @@ def plot_shapefile(f, options = 'counties'):
             rocktype = info['ROCKTYPE1']
             idx = np.where(rocktypes == rocktype)[0][0]
             patches = [Polygon(np.array(shape), True)]
-            pc = PatchCollection(patches, edgecolor=None, facecolor = blues[idx], linewidths=.5, zorder=2)
+            pc = PatchCollection(patches, edgecolor='k', linewidths=.5, zorder=2)
+            pc.set_color(blues[idx])
         if options == 'nofill':
             patches = [Polygon(np.array(shape), True)]
             pc = PatchCollection(patches, edgecolor='k', hatch = None, linewidths=0.5, zorder=2)
-        else:
-            patches = [Polygon(np.array(shape), True)]
-            pc = PatchCollection(patches, edgecolor='k', linewidths=5., zorder=2)
-            pc.set_color(random.choice(blues))
+        # else:
+            # patches = [Polygon(np.array(shape), True)]
+            # pc = PatchCollection(patches, edgecolor='k', linewidths=.5, zorder=2)
+            # pc.set_color(random.choice(blues))
         ax.add_collection(pc)
     # lt, lg = m(-105.5, 39) # test overplot a point
     # m.plot(lt, lg, 'bo', markersize = 24)
     plt.show()
+
+# plot_shapefile('Shape/GU_CountyOrEquivalent')
+# plot_shapefile('Highways/SHP/STATEWIDE/HIGHWAYS_corr', options = 'nofill')
+plot_shapefile('COgeol_dd/cogeol_dd_polygon', options = 'geo')
 
 def convert_highways(h_shp):
     sh = fiona.open(h_shp)
@@ -63,9 +67,6 @@ def convert_highways(h_shp):
             if not any(isinstance(sublist, list) for sublist in points):
                 output.write(feat)
 
-# plot_shapefile('Shape/GU_CountyOrEquivalent')
-plot_shapefile('Highways/SHP/STATEWIDE/HIGHWAYS_corr', options = 'nofill')
-# plot_shapefile('COgeol_dd/cogeol_dd_polygon', options = 'geo')
 
 
 fc = fiona.open("Shape/GU_CountyOrEquivalent.shp")
