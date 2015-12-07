@@ -5,23 +5,30 @@ import fiona
 from fiona.crs import from_epsg
 import numpy as np
 import matplotlib.pyplot as plt
-# import shapely
+import shapely
 import shapefile
 from matplotlib.patches import Polygon, PathPatch
 from matplotlib.collections import PatchCollection, LineCollection
+from imagePresentationFunctions import make_cmyk_greyscale_continuous_cmap
 import random
 # import shapely.geometry as sg
 
-def plot_shapefile(f, options = 'counties'):
+
+def plot_shapefile(f, options = 'counties', cm = 'blues'):
     num_colors = 29 # 29 unique rock types
-    cm = plt.get_cmap('Blues')
-    blues = [cm(1.*i/num_colors) for i in range(num_colors)]
+    if cm == 'blues':
+        cm = plt.get_cmap('Blues')
+        blues = [cm(1.*i/num_colors) for i in range(num_colors)]
+    else:
+        cont_cmap = make_cmyk_greyscale_continuous_cmap()
+        blues = [cont_cmap(1.*i/num_colors) for i in range(num_colors)]
     fig = plt.figure(figsize=(20,10))
     ax = fig.add_subplot(111, axisbg='w', frame_on=False)
     m = Basemap(width=800000,height=550000, resolution='l',projection='aea', lat_1=37.,lat_2=41,lon_0=-105.55,lat_0=39)
     m.readshapefile(f, name = 'state') # counties
     if options == 'geo':
-        rocktypes = np.unique(np.array([m.state_info[i]['ROCKTYPE1'] for i in range(len(m.state_info))]))
+        rocktypes = np.unique(np.array([m.state_info[i]['ROCKTYPE1'] 
+                                        for i in range(len(m.state_info))]))
     for info, shape in zip(m.state_info, m.state):
         if options == 'counties':
             if info['STATE_NAME'] != 'Colorado':
@@ -34,7 +41,8 @@ def plot_shapefile(f, options = 'counties'):
             pc.set_color(blues[idx])
         if options == 'nofill':
             patches = [Polygon(np.array(shape), True)]
-            pc = PatchCollection(patches, edgecolor='k', hatch = None, linewidths=0.5, zorder=2)
+            pc = PatchCollection(patches, edgecolor='k', hatch = None, 
+                                linewidths=0.5, zorder=2)
         # else:
             # patches = [Polygon(np.array(shape), True)]
             # pc = PatchCollection(patches, edgecolor='k', linewidths=.5, zorder=2)
@@ -44,15 +52,17 @@ def plot_shapefile(f, options = 'counties'):
     # m.plot(lt, lg, 'bo', markersize = 24)
     plt.show()
 
-# plot_shapefile('Shape/GU_CountyOrEquivalent')
-# plot_shapefile('Highways/SHP/STATEWIDE/HIGHWAYS_corr', options = 'nofill')
-plot_shapefile('COgeol_dd/cogeol_dd_polygon', options = 'geo')
+# plot_shapefile('shapefiles/Shape/GU_CountyOrEquivalent')
+# plot_shapefile('shapefiles/Highways/SHP/STATEWIDE/HIGHWAYS_corr', options = 'nofill')
+plot_shapefile('shapefiles/COgeol_dd/cogeol_dd_polygon', 
+                options = 'geo', cm = 'ta')
 
 def convert_highways(h_shp):
     sh = fiona.open(h_shp)
     orig = Proj(sh.crs)
     dest = Proj(init = 'EPSG:4326')
-    with fiona.open('Highways/SHP/STATEWIDE/HIGHWAYS_corr.shp', 'w', 'ESRI Shapefile', sh.schema.copy(), crs = from_epsg(4326)) as output:
+    with fiona.open(h_shp + '_corr.shp', 'w', 'ESRI Shapefile', 
+                    sh.schema.copy(), crs = from_epsg(4326)) as output:
         for feat in sh: 
             points = feat['geometry']['coordinates']
             lat = [point[1] for point in points]
@@ -68,12 +78,15 @@ def convert_highways(h_shp):
                 output.write(feat)
 
 
+def load_county_shapefiles():
+    fc = fiona.open("shapefiles/Shape/GU_CountyOrEquivalent.shp")
+    county_name_and_shape = [(fc[i]['properties']['COUNTY_NAM'], 
+                              fc[i]['geometry']) 
+                              for i in range(len(fc)) 
+                              if fc[i]['properties']['STATE_NAME'] == 'Colorado']
+    return fc, county_name_and_shape
 
-fc = fiona.open("Shape/GU_CountyOrEquivalent.shp")
-# county_names = [fc[i]['properties']['COUNTY_NAM'] for i in range(len(fc)) if fc[i]['properties']['STATE_NAME'] == 'Colorado']
-county_name_and_shape = [(fc[i]['properties']['COUNTY_NAM'], fc[i]['geometry']) for i in range(len(fc)) if fc[i]['properties']['STATE_NAME'] == 'Colorado']
-
-def find_which_county(coord):
+def find_which_county(coord, county_name_and_shape):
     for county_name, county_shape in county_name_and_shape:
         sh = shapely.geometry.asShape(county_shape)
         if sh.contains(shapely.geometry.Point(coord)):
