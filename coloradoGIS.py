@@ -79,6 +79,11 @@ def convert_shapefile_to_latlng_coord(h_shp):
         
         Alternatively (and much more simply):
         ogr2ogr -t_srs EPSG:4326 destination_filename.shp origin_filename.shp
+
+        Careful of the sh.schema.copy(). A shapefile with 3D geometry will
+        still crash when using basemap's readshapefile, as it will only 
+        accept 2D geometry. Changing the backend (where this would otherwise
+        crash) to unpack the 3D tuples for longitude/latitude solves this problem.
         '''
     sh = fiona.open(h_shp)
     orig = Proj(sh.crs)
@@ -95,10 +100,7 @@ def convert_shapefile_to_latlng_coord(h_shp):
                 lng = [point[0] for point in flattened]
             x, y = transform(orig, dest, lng, lat) 
             out_points = [(ln, la) for ln, la in zip(x, y)]
-            # import pdb; pdb.set_trace()
-            feat['geometry']['coordinates'] = None
             feat['geometry']['coordinates'] = out_points
-            print out_points
             # if not any(isinstance(sublist, list) for sublist in out_points):
             output.write(feat)
 
