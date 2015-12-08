@@ -6,8 +6,7 @@ small_data_subset
 *.pyc
 big_list_with_road_colorhists.csv
 big_list_with_nearest10*
-CELLS_8_Colorado_GU_STATEORTERRITORY/*
-Shape/*
+shapefiles/*
 *.log
 imageScraper.py
 *coord*
