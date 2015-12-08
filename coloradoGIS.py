@@ -11,7 +11,7 @@ from matplotlib.patches import Polygon, PathPatch
 from matplotlib.collections import PatchCollection, LineCollection
 from imagePresentationFunctions import make_cmyk_greyscale_continuous_cmap
 import random
-# import shapely.geometry as sg
+import shapely.geometry as sg
 
 
 def plot_shapefile(f, options = 'counties', cm = 'blues'):
@@ -27,7 +27,6 @@ def plot_shapefile(f, options = 'counties', cm = 'blues'):
                                for shape_info in m.state_info])
     if options == 'geologic_history':
         geologic_time_dictionary = load_geologic_history()
-        # ranges = [0, 20, 105, 235, 400, 480, 10000]
         ranges = [0, 20, 250, 400, 10000]
         all_ranges = []
         for r, r_plus1 in zip(ranges[:-1], ranges[1:]):
@@ -158,19 +157,26 @@ def convert_this_shapefile(version):
     elif version == 'highways':
         convert_shapefile_to_latlng_coord('shapefiles/Highways/SHP/STATEWIDE/HIGHWAYS.shp')
 
-def load_county_shapefiles():
-    fc = fiona.open("shapefiles/Shape/GU_CountyOrEquivalent.shp")
-    county_name_and_shape = [(fc[i]['properties']['COUNTY_NAM'], 
-                              fc[i]['geometry']) 
-                              for i in range(len(fc)) 
-                              if fc[i]['properties']['STATE_NAME'] == 'Colorado']
-    return fc, county_name_and_shape
+def load_features_and_shape(options):
+    if options == 'counties':
+        fc = fiona.open("shapefiles/Shape/GU_CountyOrEquivalent.shp")
+        feature_name_and_shape = [(fiona_shapefile['properties']['COUNTY_NAM'], 
+                                fiona_shapefile['geometry']) 
+                                for fiona_shapefile in fc
+                                if fiona_shapefile['properties']['STATE_NAME'] == 
+                                'Colorado']
+    if options == 'geologic_history':
+        fc = fiona.open('shapefiles/COgeol_dd/cogeol_dd_polygon.shp')
+        feature_name_and_shape = [(fiona_shapefile['properties']['UNIT_AGE'],
+                                fiona_shapefile['geometry'])
+                                for fiona_shapefile in fc]
+    return feature_name_and_shape
 
-def find_which_county(coord, county_name_and_shape):
-    for county_name, county_shape in county_name_and_shape:
-        sh = shapely.geometry.asShape(county_shape)
+def find_which_feature(coord, feature_name_and_shape):
+    for feature_name, feature_shape in feature_name_and_shape:
+        sh = sg.asShape(feature_shape)
         if sh.contains(shapely.geometry.Point(coord)):
-            return county_name
+            return feature_name
         else:
             continue
 
