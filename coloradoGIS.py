@@ -71,6 +71,14 @@ def plot_this_shapefile(version):
         plot_shapefile('shapefiles/water/watbnd_ogr')
     elif version == 'geo':
         plot_shapefile('shapefiles/COgeol_dd/cogeol_dd_polygon', options = 'geo', cm = 'blues')
+    elif version == '12km':
+        plot_shapefile('shapefiles/colorado_quadrants/CO_12km_ogr', options = 'other')
+    elif version == '24km':
+        plot_shapefile('shapefiles/colorado_quadrants/CO_24km_ogr', options = 'other')
+    elif version == '100km':
+        plot_shapefile('shapefiles/colorado_quadrants/CO_100km_ogr', options = 'other')
+    elif version == '1deg':
+        plot_shapefile('shapefiles/colorado_quadrants/CO_1deg_ogr', options = 'other')
 
 def convert_shapefile_to_latlng_coord(h_shp):
     ''' Input: Shapefile in projection coordinates. 
