@@ -15,41 +15,73 @@ import random
 
 
 def plot_shapefile(f, options = 'counties', cm = 'blues'):
-    num_colors = 29 # 29 unique rock types
+    fig = plt.figure(figsize=(20,10))
+    ax = fig.add_subplot(111, axisbg='w', frame_on=False)
+    m = Basemap(width=800000,height=550000, resolution='l', projection='aea',
+                lat_1=37.,lat_2=41,lon_0=-105.55,lat_0=39)
+    m.readshapefile(f, name = 'state')
+    if options == 'rocktypes':
+        # rocktypes = np.unique(np.array([m.state_info[i]['ROCKTYPE1'] 
+                                        # for i in range(len(m.state_info))]))
+        rocks= np.unique([shape_info['ROCKTYPE1']
+                               for shape_info in m.state_info])
+    if options == 'geologic_history':
+        geologic_time_dictionary = load_geologic_history()
+        # ranges = [0, 20, 105, 235, 400, 480, 10000]
+        ranges = [0, 20, 250, 400, 10000]
+        all_ranges = []
+        for r, r_plus1 in zip(ranges[:-1], ranges[1:]):
+            all_ranges += [str(r) + '-' + str(r_plus1)]
+        # rock_ages = np.unique([shape_info['UNIT_AGE']
+                               # for shape_info in m.state_info])
+        rocks = all_ranges + ['other'] # a dummy to account for nans
+    num_colors = len(rocks)
     if cm == 'blues':
         cm = plt.get_cmap('Blues')
         blues = [cm(1.*i/num_colors) for i in range(num_colors)]
     else:
         cont_cmap = make_cmyk_greyscale_continuous_cmap()
         blues = [cont_cmap(1.*i/num_colors) for i in range(num_colors)]
-    fig = plt.figure(figsize=(20,10))
-    ax = fig.add_subplot(111, axisbg='w', frame_on=False)
-    m = Basemap(width=800000,height=550000, resolution='l', projection='aea',
-                lat_1=37.,lat_2=41,lon_0=-105.55,lat_0=39)
-    m.readshapefile(f, name = 'state') # counties
-    if options == 'geo':
-        rocktypes = np.unique(np.array([m.state_info[i]['ROCKTYPE1'] 
-                                        for i in range(len(m.state_info))]))
     for info, shape in zip(m.state_info, m.state):
         if options == 'counties':
             if info['STATE_NAME'] != 'Colorado':
                 continue
             patches = [Polygon(np.array(shape), True)]
-            pc = PatchCollection(patches, edgecolor='k', hatch = None, linewidths=0.5, zorder=2)
+            pc = PatchCollection(patches, edgecolor='k', hatch = None, 
+                                 linewidths=0.5, zorder=2)
             pc.set_color(random.choice(blues))
-        elif options == 'geo':
+        elif options == 'rocktypes':
             rocktype = info['ROCKTYPE1']
-            idx = np.where(rocktypes == rocktype)[0][0]
+            idx = np.where(rocks == rocktype)[0][0]
             patches = [Polygon(np.array(shape), True)]
-            pc = PatchCollection(patches, edgecolor='k', linewidths=.5, zorder=2)
+            pc = PatchCollection(patches, edgecolor='k', linewidths=.5, 
+                                 zorder=2)
+            pc.set_color(blues[idx])
+        elif options == 'geologic_history':
+            rock_age = info['UNIT_AGE']
+            # all_ranges = []
+            for index, (r, r_plus1) in enumerate(zip(ranges[:-1], ranges[1:])):
+                # all_ranges += [str(r) + '-' + str(r_plus1)]
+                try:
+                    if ((geologic_time_dictionary[rock_age] > r) & 
+                    (geologic_time_dictionary[rock_age] < r_plus1)):
+                        idx = index 
+                except: 
+                    idx = len(all_ranges)
+            # idx = np.where(rocks == rock_age)[0][0]
+            patches = [Polygon(np.array(shape), True)]
+            pc = PatchCollection(patches, edgecolor='k', linewidths=.5, 
+                                zorder=2)
             pc.set_color(blues[idx])
         elif options == 'nofill':
             patches = [Polygon(np.array(shape), True)]
-            pc = PatchCollection(patches, edgecolor='k', hatch = None, linewidths=0.5, zorder=2)
+            pc = PatchCollection(patches, edgecolor='k', hatch = None, 
+                                 linewidths=0.5, zorder=2)
             pc.set_facecolor('none')
         else:
             patches = [Polygon(np.array(shape), True)]
-            pc = PatchCollection(patches, edgecolor='k', hatch = None, linewidths=0.5, zorder=2)
+            pc = PatchCollection(patches, edgecolor='k', hatch = None, 
+                                 linewidths=0.5, zorder=2)
             pc.set_color(random.choice(blues))
         ax.add_collection(pc)
     # lt, lg = m(-105.5, 39) # test overplot a point
@@ -69,8 +101,8 @@ def plot_this_shapefile(version):
         plot_shapefile('shapefiles/LocalRoads/SHP/STATEWIDE/LROADS_ogr', options = 'nofill')
     elif version == 'water':
         plot_shapefile('shapefiles/water/watbnd_ogr')
-    elif version == 'geo':
-        plot_shapefile('shapefiles/COgeol_dd/cogeol_dd_polygon', options = 'geo', cm = 'blues')
+    elif version == 'rocktypes':
+        plot_shapefile('shapefiles/COgeol_dd/cogeol_dd_polygon', options = 'rocktypes', cm = 'blues')
     elif version == '12km':
         plot_shapefile('shapefiles/colorado_quadrants/CO_12km_ogr', options = 'other')
     elif version == '24km':
@@ -141,3 +173,39 @@ def find_which_county(coord, county_name_and_shape):
             return county_name
         else:
             continue
+
+def load_geologic_history():
+    ''' Load the ages of each timeperiod that rocks were formed
+    (in millions of years). Used to decrease the number of unique
+    categories defining the state. '''
+    geologic_times = {None: np.nan,
+                    'Cambrian': 500,
+                    'Cretaceous': 100,
+                    'Cretaceous-Jurassic': 150,
+                    'Devonian-Cambrian': 450,
+                    'Devonian-Ordivician': 400,
+                    'Early Proterozoic': 2300,
+                    'Early-Middle Proterozoic': 1600,
+                    'Jurassic': 170,
+                    'Jurassic-Triassic': 200,
+                    'Late Archean': 2800,
+                    'Lower Cretaceous-Triassic': 100,
+                    'Mesozoic-Pennsylvanian': 300,
+                    'Middle Proterozoic': 1400,
+                    'Mississipian': 350,
+                    'Mississipian-Cambrian': 450,
+                    'Mississippian-Cambrian': 450,
+                    'Mississippian-Ordovician': 430,
+                    'Ordovician': 470,
+                    'Ordovician-Cambrian': 490,
+                    'Pennsylvanian': 310,
+                    'Permian': 270,
+                    'Permian-Pennsylvanian': 290,
+                    'Quaternary': 1,
+                    'Quaternary-Tertiary': 5,
+                    'Tertiary': 10,
+                    'Tertiary-Cretaceous': 50,
+                    'Triassic': 70,
+                    'Triassic-Pennsylvanian': 240,
+                    'Triassic-Permian': 280}
+    return geologic_times
