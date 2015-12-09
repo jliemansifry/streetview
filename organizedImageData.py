@@ -10,7 +10,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 from imageScraper import save_image, get_date
 from coloradoGIS import load_geologic_history, load_features_and_shape, find_which_feature
-from imageAnalysisFunctions import corner_frac, surf, cv2_image, sklearn_hog
+from imageAnalysisFunctions import corner_frac, surf, cv2_image, sklearn_hog, resize_and_save
 # cd = ColorDescriptor((8, 12, 3))
 
 def read_data():
@@ -26,7 +26,7 @@ def download_images(df):
     as the API maxes out at 2500 images a day (625 total locations,
     NESW for each location)'''
     count = 0
-    for lt, lg in zip(df['lat'][12275:12900], df['lng'][12275:12900]):
+    for lt, lg in zip(df['lat'][12900:13525], df['lng'][12900:13525]):
         for heading in [0, 90, 180, 270]:
             print count
             count += 1
@@ -190,6 +190,14 @@ def write_shapefile_feature(df, options):
             rock_age_range = all_ranges[agerange_idx]
             print rock_age_range
             df[column_name][idx] = rock_age_range
+
+def resize_all_images(df):
+    ''' Resize all images (data/*) to be 160x100. Done thru 13525. '''
+    NESW = ['N', 'E', 'S', 'W']
+    for idx in range(df.shape[0]):
+        for cardinal_dir in NESW:
+            image_name = df.iloc[idx]['base_filename'] + cardinal_dir + '.png'
+            resize_and_save(image_name)
 
 def check_for_column(column_name, typ = object):
     ''' Check the dataframe for the presence of the column. Create
