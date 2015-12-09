@@ -4,6 +4,7 @@ data/*
 small_data_subset/*
 small_data_subset
 *.pyc
+*.swp
 big_list_with_road_colorhists.csv
 big_list_with_nearest10*
 shapefiles/*
