@@ -5,6 +5,7 @@ small_data_subset/*
 small_data_subset
 *.pyc
 *.swp
+*ec2_gpu.pem
 big_list_with_road_colorhists.csv
 big_list_with_nearest10*
 shapefiles/*
