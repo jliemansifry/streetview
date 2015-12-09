@@ -1,21 +1,23 @@
 from matplotlib import cm
+import itertools
 import random
 # import itertools
 # import cv2
 import pandas as pd
 import numpy as np
 # from imageProcessor import ColorDescriptor
-# from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 from imageScraper import save_image, get_date
+from coloradoGIS import load_geologic_history, load_features_and_shape, find_which_feature
 from imageAnalysisFunctions import corner_frac, surf, cv2_image, sklearn_hog
-
 # cd = ColorDescriptor((8, 12, 3))
 
 def read_data():
     # df = pd.read_csv('big_list_with_filenames.csv')
     # df = pd.read_csv('big_list_with_road_colorhists.csv')
-    df = pd.read_pickle('big_list_with_nearest_10.pkl')
+    # df = pd.read_pickle('big_list_with_nearest_10.pkl')
+    df = pd.read_csv('big_list_o_trimmed_coord.csv')
     return df
 
 def download_images(df):
@@ -24,17 +26,11 @@ def download_images(df):
     as the API maxes out at 2500 images a day (625 total locations,
     NESW for each location)'''
     count = 0
-    for lt, lg in zip(df['lat'][7512:7513], df['lng'][7512:7513]):
+    for lt, lg in zip(df['lat'][12275:12900], df['lng'][12275:12900]):
         for heading in [0, 90, 180, 270]:
             print count
             count += 1
             save_image((lt,lg), heading)
-
-def write_dates(df):
-    ''' Filled in missing dates after downloading images before 
-    get_date was working. Might want to use something like this
-    later to write vectors for each image. '''
-    df['date'] = [get_date(co) for co in (zip([lat for lat in df['lat']],[lng for lng in df['lng']]))]
 
 def plot_3d(df, style = 'scatter', show = True):
     ''' Plot all the locations in lat/lng/elev space. 
@@ -112,7 +108,6 @@ def play_color_likeness(df):
         print "new image location is {}, {}".format(df['lat'][nearest_image_idx], df['lng'][nearest_image_idx])
         print "the indices in the df are {} and {}".format(source_idx, nearest_image_idx)
         print "\n"
-
         fig = plt.figure(figsize = (16,8))
         ax = fig.add_subplot(2,2,1)
         ax.imshow(cv2_image(filename))
@@ -123,7 +118,6 @@ def play_color_likeness(df):
         ax2.set_xticks([])
         ax2.set_yticks([])
         ax3 = fig.add_subplot(2,2,3)
-
         nearest_10 = find_locations_nearest_10(source_idx, direction)
         true_loc = df['lat'][source_idx], df['lng'][source_idx]
         ax3.scatter(nearest_10[2:,1], nearest_10[2:,0])#, label = 'rest of top 10')
@@ -141,7 +135,6 @@ def play_color_likeness(df):
         ax3.set_ylim(37, 41)
         ax4.set_xlim(-109.5, -102.5)
         ax4.set_ylim(37, 41)
-
         plt.show()
 
 def find_locations_nearest_10(source_idx, direction):
@@ -150,11 +143,48 @@ def find_locations_nearest_10(source_idx, direction):
     nearest_locs = np.array([(df['lat'][idx], df['lng'][idx]) for idx in nearest_image_idx])
     return nearest_locs
 
+def write_dates(df):
+    ''' Filled in missing dates after downloading images before 
+    get_date was working. Might want to use something like this
+    later to write vectors for each image. '''
+    df['date'] = [get_date(co) for co in itertools.izip(df.lat, df.lng)]
+
 def write_filenames(df):
     ''' Used to write the base filenames for each location.'''
     filename_lat = df.lat.apply(lambda x: str(x)[:8])
     filename_lng = df.lng.apply(lambda x: str(x)[:8])
     df['base_filename'] = 'data/lat_' + filename_lat + ',long_' + filename_lng + '_'
+
+def write_shapefile_feature(df, options):
+    if options == 'counties':
+        county_names_and_shapes = load_features_and_shape(options = 'counties')
+        column_name = 'county'
+        check_for_column(column_name)
+        for idx, coord in enumerate(itertools.izip(df.lng.values, df.lat.values)):
+            print idx
+            coun = find_which_feature(coord, county_names_and_shapes)
+            print coun
+            df[column_name][idx] = coun
+    if options == 'geologic_history':
+        rock_ages_and_shapes = load_features_and_shape(options = 'geologic_history')
+        geologic_time_dictionary = load_geologic_history()
+        column_name = 'rock_age'
+        check_for_column(column_name)
+        ranges = [0, 5, 20, 250, 500, 3000]
+        all_ranges = ['0-5', '5-20', '20-250', '250-500', '500-3000']
+        for idx, coord in enumerate(itertools.izip(df.lng.values, df.lat.values)):
+            rock_age_name = find_which_feature(coord, rock_ages_and_shapes)
+            rock_age = geologic_time_dictionary[rock_age_name]
+            print rock_age
+            for age_idx, (r, r_plus1) in enumerate(zip(ranges[:-1], ranges[1:])):
+                try:
+                    if ((rock_age > r) & (rock_age < r_plus1)):
+                        agerange_idx = age_idx
+                except: 
+                    agerange_idx = 2 #20-250 was a good middleground for nans
+            rock_age_range = all_ranges[agerange_idx]
+            print rock_age_range
+            df[column_name][idx] = rock_age_range
 
 def check_for_column(column_name, typ = object):
     ''' Check the dataframe for the presence of the column. Create
