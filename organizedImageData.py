@@ -156,6 +156,10 @@ def write_filenames(df):
     df['base_filename'] = 'data/lat_' + filename_lat + ',long_' + filename_lng + '_'
 
 def write_shapefile_feature(df, options):
+    ''' Analyze each long/lat point and write a feature based on its location.
+    (either counties or rock age ranges). These features are
+    derived from shapefiles downloaded from:
+    http://coloradoview.org/cwis438/websites/ColoradoView/Data.php '''
     if options == 'counties':
         county_names_and_shapes = load_features_and_shape(options = 'counties')
         column_name = 'county'
@@ -173,6 +177,7 @@ def write_shapefile_feature(df, options):
         ranges = [0, 5, 20, 250, 500, 3000]
         all_ranges = ['0-5', '5-20', '20-250', '250-500', '500-3000']
         for idx, coord in enumerate(itertools.izip(df.lng.values, df.lat.values)):
+            print idx
             rock_age_name = find_which_feature(coord, rock_ages_and_shapes)
             rock_age = geologic_time_dictionary[rock_age_name]
             print rock_age
