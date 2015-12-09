@@ -21,19 +21,15 @@ def plot_shapefile(f, options = 'counties', cm = 'blues'):
                 lat_1=37.,lat_2=41,lon_0=-105.55,lat_0=39)
     m.readshapefile(f, name = 'state')
     if options == 'rocktypes':
-        # rocktypes = np.unique(np.array([m.state_info[i]['ROCKTYPE1'] 
-                                        # for i in range(len(m.state_info))]))
         rocks= np.unique([shape_info['ROCKTYPE1']
-                               for shape_info in m.state_info])
+                          for shape_info in m.state_info])
     if options == 'geologic_history':
         geologic_time_dictionary = load_geologic_history()
-        ranges = [0, 20, 250, 400, 10000]
+        ranges = [0, 5, 20, 250, 500, 3000] # in Myr
         all_ranges = []
         for r, r_plus1 in zip(ranges[:-1], ranges[1:]):
             all_ranges += [str(r) + '-' + str(r_plus1)]
-        # rock_ages = np.unique([shape_info['UNIT_AGE']
-                               # for shape_info in m.state_info])
-        rocks = all_ranges + ['other'] # a dummy to account for nans
+        rocks = all_ranges
     num_colors = len(rocks)
     if cm == 'blues':
         cm = plt.get_cmap('Blues')
@@ -58,16 +54,13 @@ def plot_shapefile(f, options = 'counties', cm = 'blues'):
             pc.set_color(blues[idx])
         elif options == 'geologic_history':
             rock_age = info['UNIT_AGE']
-            # all_ranges = []
             for index, (r, r_plus1) in enumerate(zip(ranges[:-1], ranges[1:])):
-                # all_ranges += [str(r) + '-' + str(r_plus1)]
                 try:
                     if ((geologic_time_dictionary[rock_age] > r) & 
                     (geologic_time_dictionary[rock_age] < r_plus1)):
                         idx = index 
                 except: 
-                    idx = len(all_ranges)
-            # idx = np.where(rocks == rock_age)[0][0]
+                    idx = 2 #20-250 was a good middleground for nans
             patches = [Polygon(np.array(shape), True)]
             pc = PatchCollection(patches, edgecolor='k', linewidths=.5, 
                                 zorder=2)
