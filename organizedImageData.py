@@ -149,11 +149,11 @@ def write_dates(df):
     later to write vectors for each image. '''
     df['date'] = [get_date(co) for co in itertools.izip(df.lat, df.lng)]
 
-def write_filenames(df):
+def write_filenames(df, options = 'data'):
     ''' Used to write the base filenames for each location.'''
     filename_lat = df.lat.apply(lambda x: str(x)[:8])
     filename_lng = df.lng.apply(lambda x: str(x)[:8])
-    df['base_filename'] = 'data/lat_' + filename_lat + ',long_' + filename_lng + '_'
+    df['base_filename'] = options + '/lat_' + filename_lat + ',long_' + filename_lng + '_'
 
 def write_shapefile_feature(df, options):
     ''' Analyze each long/lat point and write a feature based on its location.
