@@ -2,6 +2,8 @@ import cv2
 from skimage.feature import hog
 from skimage import color
 import numpy as np
+from scipy.misc import imresize, imsave
+
 
 def cv2_image(img_filename):
     ''' Return the cv2 image of the given filename. '''
@@ -47,6 +49,11 @@ def surf(img, hessian_thresh = 5000, upright = False, show = False):
         cv2.waitKey(0)
     cv2.destroyAllWindows()
     return surf, kp, des
+
+def resize_and_save(img_name):
+    img = cv2.imread(img_name)
+    resized = imresize(img, 0.25)
+    imsave('data_160x100/' + img_name[5:-4] + '160x100.png', resized) 
 
 def sklearn_hog(img_name):
     ''' Sklearn's Histogram of Oriented Gradients (HOG) functionality
