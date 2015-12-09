@@ -178,7 +178,7 @@ def write_shapefile_feature(df, options):
             print rock_age
             for age_idx, (r, r_plus1) in enumerate(zip(ranges[:-1], ranges[1:])):
                 try:
-                    if ((rock_age > r) & (rock_age < r_plus1)):
+                    if ((rock_age > r) & (rock_age <= r_plus1)):
                         agerange_idx = age_idx
                 except: 
                     agerange_idx = 2 #20-250 was a good middleground for nans
