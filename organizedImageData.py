@@ -1,8 +1,10 @@
 from matplotlib import cm
+from scipy.misc import imresize, imsave, imread
 import itertools
+import os
 import random
 # import itertools
-# import cv2
+import cv2
 import pandas as pd
 import numpy as np
 # from imageProcessor import ColorDescriptor
@@ -10,23 +12,26 @@ from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 from imageScraper import save_image, get_date
 from coloradoGIS import load_geologic_history, load_features_and_shape, find_which_feature
-from imageAnalysisFunctions import corner_frac, surf, cv2_image, sklearn_hog, resize_and_save
+from imageAnalysisFunctions import corner_frac, surf, cv2_image, sklearn_hog
 # cd = ColorDescriptor((8, 12, 3))
 
 def read_data():
     # df = pd.read_csv('big_list_with_filenames.csv')
     # df = pd.read_csv('big_list_with_road_colorhists.csv')
     # df = pd.read_pickle('big_list_with_nearest_10.pkl')
-    df = pd.read_csv('big_list_o_trimmed_coord.csv')
+    # df = pd.read_csv('big_list_o_trimmed_coord.csv')
+    # df = pd.read_pickle('big_list_with_all_classes.pkl')
+    df = pd.read_pickle('big_list_reindex_with_classes.pkl')
     return df
 
 def download_images(df):
     ''' Download images from Google Maps Streetview API using
     the function defined in imageScraper. Must be used in bunches, 
-    as the API maxes out at 2500 images a day (625 total locations,
+    as the API maxes out at 25000 images a day (6250 total locations,
     NESW for each location)'''
     count = 0
-    for lt, lg in zip(df['lat'][12900:13525], df['lng'][12900:13525]):
+    # for lt, lg in zip(df['lat'][14150:14293], df['lng'][14150:14293]):
+    for lt, lg in zip(df['lat'][10375:10385], df['lng'][10375:10385]):
         for heading in [0, 90, 180, 270]:
             print count
             count += 1
@@ -155,20 +160,31 @@ def write_filenames(df, options = 'data'):
     filename_lng = df.lng.apply(lambda x: str(x)[:8])
     df['base_filename'] = options + '/lat_' + filename_lat + ',long_' + filename_lng + '_'
 
-def write_shapefile_feature(df, options):
+def write_shapefile_feature(df, options, index_to_fill= None):
     ''' Analyze each long/lat point and write a feature based on its location.
     (either counties or rock age ranges). These features are
     derived from shapefiles downloaded from:
-    http://coloradoview.org/cwis438/websites/ColoradoView/Data.php '''
+    http://coloradoview.org/cwis438/websites/ColoradoView/Data.php 
+    
+    Pass the optional 'index to fill' to fill only certain rows, for example
+    if the value was null, or if new data just came in. '''
     if options == 'counties':
         county_names_and_shapes = load_features_and_shape(options = 'counties')
         column_name = 'county'
         check_for_column(column_name)
-        for idx, coord in enumerate(itertools.izip(df.lng.values, df.lat.values)):
-            print idx
-            coun = find_which_feature(coord, county_names_and_shapes)
-            print coun
-            df[column_name][idx] = coun
+        if index_to_fill == None:
+            for idx, coord in enumerate(itertools.izip(df.lng.values, df.lat.values)):
+                print idx
+                coun = find_which_feature(coord, county_names_and_shapes)
+                print coun
+                df[column_name][idx] = coun
+        else:
+            for idx in index_to_fill:
+                coord = (df.ix[idx]['lng'], df.ix[idx]['lat'])
+                print idx
+                coun = find_which_feature(coord, county_names_and_shapes)
+                print coun
+                df[column_name][idx] = coun
     if options == 'geologic_history':
         rock_ages_and_shapes = load_features_and_shape(options = 'geologic_history')
         geologic_time_dictionary = load_geologic_history()
@@ -176,28 +192,73 @@ def write_shapefile_feature(df, options):
         check_for_column(column_name)
         ranges = [0, 5, 20, 250, 500, 3000]
         all_ranges = ['0-5', '5-20', '20-250', '250-500', '500-3000']
-        for idx, coord in enumerate(itertools.izip(df.lng.values, df.lat.values)):
-            print idx
-            rock_age_name = find_which_feature(coord, rock_ages_and_shapes)
-            rock_age = geologic_time_dictionary[rock_age_name]
-            print rock_age
+        def which_range(ranges, all_ranges, rock_age):
+            ''' Find which range the given age is in. '''
             for age_idx, (r, r_plus1) in enumerate(zip(ranges[:-1], ranges[1:])):
                 try:
                     if ((rock_age > r) & (rock_age <= r_plus1)):
                         agerange_idx = age_idx
                 except: 
                     agerange_idx = 2 #20-250 was a good middleground for nans
-            rock_age_range = all_ranges[agerange_idx]
-            print rock_age_range
-            df[column_name][idx] = rock_age_range
+            try:
+                return all_ranges[agerange_idx]
+            except:
+                return all_ranges[2] #if agerange_idx != np.nan else all_ranges[2]
+        if index_to_fill == None:
+            for idx, coord in enumerate(itertools.izip(df.lng.values, df.lat.values)):
+                print idx
+                rock_age_name = find_which_feature(coord, rock_ages_and_shapes)
+                rock_age = geologic_time_dictionary[rock_age_name]
+                print rock_age
+                rock_age_range = which_range(ranges, all_ranges, rock_age)
+                # for age_idx, (r, r_plus1) in enumerate(zip(ranges[:-1], ranges[1:])):
+                    # try:
+                        # if ((rock_age > r) & (rock_age <= r_plus1)):
+                            # agerange_idx = age_idx
+                    # except: 
+                        # agerange_idx = 2 #20-250 was a good middleground for nans
+                print rock_age_range
+                df[column_name][idx] = rock_age_range
+        else:
+            for idx in index_to_fill:
+                print idx
+                coord = (df.ix[idx]['lng'], df.ix[idx]['lat'])
+                rock_age_name = find_which_feature(coord, rock_ages_and_shapes)
+                rock_age = geologic_time_dictionary[rock_age_name]
+                print rock_age
+                rock_age_range = which_range(ranges, all_ranges, rock_age)
+                print rock_age_range
+                df[column_name][idx] = rock_age_range
 
-def resize_all_images(df):
+def resize_and_save(img_name, true_idx):
+    # img = cv2.imread(img_name)
+    try:
+        img = imread(img_name)
+    except:
+        cardinal_dir = img_name[-5:-4]
+        cardinal_translation = {'N': 0, 'E': 90, 'S': 180, 'W': 270}
+        print cardinal_dir, cardinal_translation[cardinal_dir]
+        coord = (df.ix[true_idx]['lat'], df.ix[true_idx]['lng'])
+        print coord
+        print 'Saving new image...'
+        save_image(coord, cardinal_translation[cardinal_dir])
+    finally:
+        img_name_to_write = 'data_160x100/' + img_name[5:-4] + '160x100.png'
+        if os.path.isfile(img_name_to_write) == False:
+            img = imread(img_name)
+            resized = imresize(img, 0.25)
+            print 'Writing file...'
+            imsave('data_160x100/' + img_name[5:-4] + '160x100.png', resized) 
+
+def resize_all_images(df, start_idx = 0):
     ''' Resize all images (data/*) to be 160x100. Done thru 13525. '''
     NESW = ['N', 'E', 'S', 'W']
-    for idx in range(df.shape[0]):
+    for idx in range(df[start_idx:].shape[0]):
+        true_idx = start_idx + idx
+        print idx, true_idx
         for cardinal_dir in NESW:
-            image_name = df.iloc[idx]['base_filename'] + cardinal_dir + '.png'
-            resize_and_save(image_name)
+            image_name = df.ix[true_idx]['base_filename'] + cardinal_dir + '.png'
+            resize_and_save(image_name, true_idx)
 
 def check_for_column(column_name, typ = object):
     ''' Check the dataframe for the presence of the column. Create
