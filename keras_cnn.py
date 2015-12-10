@@ -10,7 +10,7 @@ import numpy as np
 from keras.utils import np_utils
 
 def load_data():
-    df = pd.read_pickle("big_list_with_classes.pkl")
+    df = pd.read_pickle("big_list_with_all_classes.pkl")
     write_filenames(df, options = 'data_160x100')
     NESW = ['N', 'E', 'S', 'W']
     count = 6000 # just a test for now
