@@ -19,10 +19,16 @@ def read_data():
     # df = pd.read_csv('big_list_with_filenames.csv')
     # df = pd.read_csv('big_list_with_road_colorhists.csv')
     # df = pd.read_pickle('big_list_with_nearest_10.pkl')
-    # df = pd.read_csv('big_list_o_trimmed_coord.csv')
+    df_with_new = pd.read_csv('big_list_o_trimmed_coord.csv')
+    df_with_new = df_with_new.drop_duplicates()
     # df = pd.read_pickle('big_list_with_all_classes.pkl')
     df = pd.read_pickle('big_list_reindex_with_classes.pkl')
-    return df
+    return df, df_with_new
+
+def merge_old_and_new(df_with_new, df):
+    co = df.columns.tolist()
+    merged_df = pd.merge(left = df_with_new, right = df, how = 'left', left_on = co[:5], right_on = co[:5])
+    return merged_df
 
 def download_images(df):
     ''' Download images from Google Maps Streetview API using
@@ -230,7 +236,7 @@ def write_shapefile_feature(df, options, index_to_fill= None):
                 print rock_age_range
                 df[column_name][idx] = rock_age_range
 
-def resize_and_save(img_name, true_idx):
+def resize_and_save(df, img_name, true_idx, loc = '80x50', new_img = False):
     # img = cv2.imread(img_name)
     try:
         img = imread(img_name)
@@ -243,12 +249,15 @@ def resize_and_save(img_name, true_idx):
         print 'Saving new image...'
         save_image(coord, cardinal_translation[cardinal_dir])
     finally:
-        img_name_to_write = 'data_160x100/' + img_name[5:-4] + '160x100.png'
+        img_name_to_write = 'data_' + loc + '/' + img_name[5:-4] + loc + '.png'
         if os.path.isfile(img_name_to_write) == False:
             img = imread(img_name)
-            resized = imresize(img, 0.25)
+            resized = imresize(img, 0.125)
             print 'Writing file...'
-            imsave('data_160x100/' + img_name[5:-4] + '160x100.png', resized) 
+            if new_img == False:
+                imsave('data_' + loc + '/' + img_name[5:-4] + loc + '.png', resized) 
+            else:
+                imsave('data_' + loc + '_new/' + img_name[5:-4] + loc + '.png', resized)
 
 def resize_all_images(df, start_idx = 0):
     ''' Resize all images (data/*) to be 160x100. Done thru 13525. '''
@@ -258,7 +267,7 @@ def resize_all_images(df, start_idx = 0):
         print idx, true_idx
         for cardinal_dir in NESW:
             image_name = df.ix[true_idx]['base_filename'] + cardinal_dir + '.png'
-            resize_and_save(image_name, true_idx)
+            resize_and_save(df, image_name, true_idx)
 
 def check_for_column(column_name, typ = object):
     ''' Check the dataframe for the presence of the column. Create
@@ -319,7 +328,8 @@ def calculate_features_and_determine_closest(df, cd, distance_metric = 'euclidea
 
 if __name__ == '__main__':
     # pass
-    df = read_data()
+    df, df_with_new = read_data()
+    merged_df = merge_old_and_new(df_with_new, df)
     # test = plot_3d(df, style = 'wireframe', show = False)
     # write_filenames(df)
     # df.to_csv('big_list_with_filenames.csv', index = False)
