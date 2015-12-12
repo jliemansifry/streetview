@@ -13,11 +13,11 @@ def load_data():
     df = pd.read_pickle("big_list_with_all_classes.pkl")
     write_filenames(df, options = 'data_160x100')
     NESW = ['N', 'E', 'S', 'W']
-    count = 6000 # just a test for now
+    count = df.shape[0]#6000 # just a test for now
     all_X_data = np.zeros((count*4, 100, 160, 3))
     categories = ['0-5', '5-20', '20-250', '250-500', '500-3000']
-    all_y_data = np.zeros(6000*4)
-    for df_idx in xrange(6000):
+    all_y_data = np.zeros(count*4)
+    for df_idx in xrange(count):
         sub_idx = 0
         for cardinal_dir in NESW:
             print df_idx
@@ -31,8 +31,9 @@ def load_data():
     return df, all_X_data, all_y_data
 
 def run_model(X, y):
-    X_train, X_test = X[:20000], X[20000:]
-    y_train, y_test = y[:20000], y[20000:]
+    split_train = len(X) * 0.75
+    X_train, X_test = X[:split_train], X[split_train:len(X)]
+    y_train, y_test = y[:split_train], y[split_train:len(X)]
     
     batch_size = 128
     nb_classes = 5
@@ -91,4 +92,4 @@ def run_model(X, y):
 
 if __name__ == '__main__':
     df, X, y = load_data()
-    run_model(X, y)
+    # run_model(X, y)
