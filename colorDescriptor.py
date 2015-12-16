@@ -17,7 +17,7 @@ class ColorDescriptor(object):
         self.bins = bins
         self.hist_loc = hist_loc
 
-    def describe(self, image):
+    def describe(self, image, norm_and_flatten = True):
         ''' Convert the image to the HSV color space and initialize
         the features used to quantify the image.'''
         image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
@@ -36,12 +36,12 @@ class ColorDescriptor(object):
             for (startX, endX, startY, endY) in segments:
                 image_mask = np.zeros(image.shape[:2], dtype = "uint8")
                 cv2.rectangle(image_mask, (startX, startY), (endX, endY), 255, -1)
-                hist = self.histogram(image, image_mask)
+                hist = self.histogram(image, image_mask, norm_and_flatten)
                 features.extend(hist)
         elif self.hist_loc == 'road':
             ''' 
-            Divide the image into 3 sections, ignoring the 'sky' portion of the image. 
-            Bottom left (A), bottom center (B), bottom right (C). 
+            Divide the image into 4 sections, including the 'sky' portion of the image. 
+            Bottom left (A), bottom center (B), bottom right (C), and top (D).
             B is in the shape of a road extending toward the horizon. 
             If the road is centered in the image (ie. the road is 
             oriented N, S, E, or W), this may increase the ability
@@ -49,31 +49,34 @@ class ColorDescriptor(object):
             Set up for a 640x400 image. 
             ___________
             |         |
-            |_________|
+            |____D____|
             |_A_/B\_C_|
             '''
             bottom_left = np.array([[0, 220], [320, 220], [240, 400], [0, 400]])
             center_road = np.array([[320,220], [240, 400], [400, 400]])
             bottom_right = np.array([[320,220], [640, 220], [640, 400], [400, 400]])
-            segments = [bottom_left, center_road, bottom_right]
+            top = np.array([[0, 0], [640, 0], [640, 220], [0, 220]])
+            segments = [bottom_left, center_road, bottom_right, top]
             for points in segments:
                 image_mask = np.zeros(image.shape[:2], dtype = "uint8")
                 cv2.fillPoly(image_mask, [points], color = 255)
-                hist = self.histogram(image, image_mask)
+                hist = self.histogram(image, image_mask, norm_and_flatten)
                 features.extend(hist)
         return features
 
-    def histogram(self, image, mask):
+    def histogram(self, image, mask, norm_and_flatten):
         '''Extract a 3D color histogram from the masked region of the image
         at the given resolution of bins per channel. Normalize the histogram,
         flatten it to a 1D array, and return it.'''
         hist = cv2.calcHist([image], [0, 1, 2], mask, self.bins, [0, 180, 0, 256, 0, 256])
-        return cv2.normalize(hist).flatten()
+        if norm_and_flatten:
+            return cv2.normalize(hist).flatten()
+        else:
+            return hist
 
     def show_color_histogram(self, image):
         ''' Show the 2d histogram. '''
         hsv_map = np.zeros((180, 256, 3), np.uint8)
-        # hsv_map = np.zeros((360, 512, 3), np.uint8) # maybe to make bigger later?
         h, s = np.indices(hsv_map.shape[:2])
         hsv_map[:,:,0] = h
         hsv_map[:,:,1] = s
