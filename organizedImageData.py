@@ -19,11 +19,12 @@ def read_data():
     # df = pd.read_csv('big_list_with_filenames.csv')
     # df = pd.read_csv('big_list_with_road_colorhists.csv')
     # df = pd.read_pickle('big_list_with_nearest_10.pkl')
-    df_with_new = pd.read_csv('big_list_o_trimmed_coord.csv')
-    df_with_new = df_with_new.drop_duplicates()
-    # df = pd.read_pickle('big_list_with_all_classes.pkl')
-    df = pd.read_pickle('big_list_reindex_with_classes.pkl')
-    return df, df_with_new
+    # df_with_new = pd.read_csv('big_list_o_trimmed_coord.csv')
+    # df_with_new = df_with_new.drop_duplicates()
+    df = pd.read_pickle('big_list_with_classes_thru_14620.pkl')
+    # df = pd.read_pickle('big_list_reindex_with_classes.pkl')
+
+    return df#, df_with_new
 
 def merge_old_and_new(df_with_new, df):
     co = df.columns.tolist()
@@ -276,7 +277,7 @@ def check_for_column(column_name, typ = object):
         df[column_name] = 0.
         df[column_name] = df[column_name].astype(typ)
 
-def write_features(df, cd):
+def write_features(df, cd, options = 'find_dominant_color'):
     ''' Write the ColorDescriptor histogram to a column in the dataframe.
     Not worth actually using, as unpacking the feature vectors from each
     column is a pain, and storing them isn't really necessary. '''
@@ -289,7 +290,7 @@ def write_features(df, cd):
         for cardinal_dir in NESW:
             image_name = df.iloc[idx]['base_filename'] + cardinal_dir + '.png'
             image = cv2_image(image_name)
-            ltlg_features = np.array(cd.describe(image))
+            ltlg_features = np.array(cd.describe(image, norm_and_flatten = True))
             df['hist_vec_' + cd.hist_loc + '_' + cardinal_dir][idx] = ltlg_features
 
 def calculate_features_and_determine_closest(df, cd, distance_metric = 'euclidean'):
@@ -326,10 +327,33 @@ def calculate_features_and_determine_closest(df, cd, distance_metric = 'euclidea
                 denominator = np.linalg.norm(ltlg_features[0]) * np.linalg.norm(ltlg_features, axis = 1)
                 df['nearest_10_neighbors_' + distance_metric + '_' + cardinal_dir][idx] = np.argsort(numerator/denominator)[-11:-1][::-1]
 
+def calc_avg_color(df):
+    NESW = ['N', 'E', 'S', 'W']
+    cols_to_write = ['avg_r_up', 'avg_r_low', 'avg_g_up', 'avg_g_low', 'avg_b_up', 'avg_b_low']
+    for col in cols_to_write:
+        check_for_column(col)
+    for idx in range(10): #range(df.shape[0]):
+        r_up, r_low, g_up, g_low, b_up, b_low = [], [], [], [], [], []
+        for cardinal_dir in NESW:
+            im = imread(df['base_filename'][idx] + cardinal_dir + '.png')
+            r_up += [im[:200, :, 0].mean()]
+            r_low += [im[200:, :, 0].mean()]
+            g_up += [im[:200, :, 1].mean()]
+            g_low += [im[200:, :, 1].mean()]
+            b_up += [im[:200, :, 2].mean()]
+            b_low += [im[200:, :, 2].mean()]
+        df['avg_r_up'][idx] = np.mean(r_up)
+        df['avg_r_low'][idx] = np.mean(r_low)
+        df['avg_g_up'][idx] = np.mean(g_up)
+        df['avg_g_low'][idx] = np.mean(g_low)
+        df['avg_b_up'][idx] = np.mean(b_up)
+        df['avg_b_low'][idx] = np.mean(b_low)
+
+
 if __name__ == '__main__':
     # pass
-    df, df_with_new = read_data()
-    merged_df = merge_old_and_new(df_with_new, df)
+    df = read_data()
+    # merged_df = merge_old_and_new(df_with_new, df)
     # test = plot_3d(df, style = 'wireframe', show = False)
     # write_filenames(df)
     # df.to_csv('big_list_with_filenames.csv', index = False)
