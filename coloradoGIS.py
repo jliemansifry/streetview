@@ -13,8 +13,7 @@ from imagePresentationFunctions import make_cmyk_greyscale_continuous_cmap
 import random
 import shapely.geometry as sg
 
-
-def plot_shapefile(f, options = 'counties', cm = 'blues'):
+def plot_shapefile(f, options = 'counties', cm = 'blues', df = None):
     fig = plt.figure(figsize=(20,10))
     ax = fig.add_subplot(111, axisbg='w', frame_on=False)
     m = Basemap(width=800000,height=550000, resolution='l', projection='aea',
@@ -30,7 +29,7 @@ def plot_shapefile(f, options = 'counties', cm = 'blues'):
         for r, r_plus1 in zip(ranges[:-1], ranges[1:]):
             all_ranges += [str(r) + '-' + str(r_plus1)]
         rocks = all_ranges
-    num_colors = len(rocks)
+    num_colors = 10 # len(rocks)
     if cm == 'blues':
         cm = plt.get_cmap('Blues')
         blues = [cm(1.*i/num_colors) for i in range(num_colors)]
@@ -41,10 +40,29 @@ def plot_shapefile(f, options = 'counties', cm = 'blues'):
         if options == 'counties':
             if info['STATE_NAME'] != 'Colorado':
                 continue
+            county_name = info['COUNTY_NAM']
+            print county_name
+            locs = np.where(df['county'] == county_name)[0]
+            r_avg = df['avg_r_low'][locs].mean()
+            g_avg = df['avg_g_low'][locs].mean()
+            b_avg = df['avg_b_low'][locs].mean()
             patches = [Polygon(np.array(shape), True)]
             pc = PatchCollection(patches, edgecolor='k', hatch = None, 
                                  linewidths=0.5, zorder=2)
-            pc.set_color(random.choice(blues))
+
+            # sh = sg.asShape(np.array(shape))
+            # r_avg, g_avg, b_avg= [], [], []
+            # for idx in range(10): #range(df.shape[0]):
+                # print idx
+                # coord = zip(df['lng'][idx], df['lat'][idx])
+                # if sh.contains(shapely.geometry.Point(coord)):
+                # r_avg += [df['avg_r_low'][idx] / 255.]
+                # g_avg += [df['avg_g_low'][idx] / 255.]
+                # b_avg += [df['avg_b_low'][idx] / 255.]
+                # if r_avg == []:
+                    # r_avg, g_avg, b_avg = 0., 0., 0.
+            # pc.set_color(random.choice(blues))
+            pc.set_color((r_avg/255., g_avg/255., b_avg/255.))
         elif options == 'rocktypes':
             rocktype = info['ROCKTYPE1']
             idx = np.where(rocks == rocktype)[0][0]
@@ -164,6 +182,10 @@ def load_features_and_shape(options):
                                 fiona_shapefile['geometry'])
                                 for fiona_shapefile in fc]
     return feature_name_and_shape
+
+# def shape_contains(coord, options = 'counties'):
+    # if options == 'counties':
+        # fc = fiona.open("shapefiles/Shape/GU_CountyOrEquivalent.shp")
 
 def find_which_feature(coord, feature_name_and_shape):
     for feature_name, feature_shape in feature_name_and_shape:
