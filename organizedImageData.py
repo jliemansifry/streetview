@@ -50,10 +50,12 @@ def write_mountains_cities_plains(df):
     plains = reduce(np.intersect1d, [not_cities, np.where(df['lng'] > -105.25), np.where(df['elev'] < 1800)])
     not_plains = np.setdiff1d(np.arange(len(df)), plains)
     mountains = reduce(np.intersect1d, [not_cities, not_plains, np.where(df['lng'] < -102)])
-    df['cities'] = df.index.isin(cities)
-    df['mountains'] = df.index.isin(mountains)
-    df['plains'] = df.index.isin(plains)
-    print df.cities.sum() + df.plains.sum() + df.mountains.sum()
+    category = ['mtn' if i in mountains else 'city' if i in cities else 'plains' for i in range(len(df))]
+    df['mcp'] = category
+    #df['cities'] = df.index.isin(cities)
+    #df['mountains'] = df.index.isin(mountains)
+    #df['plains'] = df.index.isin(plains)
+    print len(cities) + len(plains) + len(mountains)
 
 def plot_3d(df, style = 'scatter', show = True):
     ''' Plot all the locations in lat/lng/elev space. 
