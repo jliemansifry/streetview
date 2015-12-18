@@ -21,7 +21,7 @@ def read_data():
     # df = pd.read_pickle('big_list_with_nearest_10.pkl')
     # df_with_new = pd.read_csv('big_list_o_trimmed_coord.csv')
     # df_with_new = df_with_new.drop_duplicates()
-    df = pd.read_pickle('big_list_with_classes_thru_14620.pkl')
+    df = pd.read_pickle('big_list_with_only_4_rock_classes_thru_14620.pkl')
     # df = pd.read_pickle('big_list_reindex_with_classes.pkl')
 
     return df#, df_with_new
@@ -52,9 +52,14 @@ def plot_3d(df, style = 'scatter', show = True):
     ax.set_xlabel('lat') 
     ax.set_ylabel('lng')
     ax.set_zlabel('elevation (m)', rotation = 90)
+    # ab = np.where(df['elev_gt_1800'] == True)[0]
+    # be = np.where(df['elev_gt_1800'] == False)[0]
+    ab = np.where(df['elev'] > 2100)[0]
+    be = np.where(df['elev'] < 2100)[0]
     if show:
         if style == 'scatter':
-            ax.scatter(df.lat, df.lng, df.elev, s = 1)
+            ax.scatter(df.lat[be], df.lng[be], df.elev[be], color = 'k', s = 1)#['k'] * len(be), s = [1] * len(ab))
+            ax.scatter(df.lat[ab], df.lng[ab], df.elev[ab], color = 'r', s = 1)# ['r'] * len(ab), s = [1] * len(ab))
             plt.gca().invert_yaxis()
         if style == 'wireframe':
             ordered_lat = df.lat[np.lexsort((df.lat.values, df.lng.values))].values
@@ -71,6 +76,40 @@ def make_hist(cd, img):
     are the options for the ColorDescriptor; their resulting
     histogram feature vectors will be different lengths. '''
     return cd.describe(img)
+
+def show_me(df, idx, classes = None, probas = None):
+    NESW = ['N','E','S','W']
+    filenames = [df['base_filename'][idx] + cardinal_dir + '.png' for cardinal_dir in NESW]
+    print filenames
+    #plt.imshow(filenames[0])
+    fig = plt.figure(figsize = (16,8))
+    ax = fig.add_subplot(2,2,1)
+    ax.imshow(cv2_image(filenames[0]))
+    ax.set_title('North')
+    ax2 = fig.add_subplot(2,2,2)
+    ax2.imshow(cv2_image(filenames[1]))
+    ax2.set_title('East')
+    ax3 = fig.add_subplot(2,2,3)
+    ax3.imshow(cv2_image(filenames[2]))
+    ax3.set_title('South')
+    ax4 = fig.add_subplot(2,2,4)
+    ax4.imshow(cv2_image(filenames[3]))
+    ax4.set_title('West')
+    print "The county is: {}".format(df['county'][idx])
+    print "The true elevation is {}".format(df['elev'][idx])
+    print "The age of the rock is in the range of {} million years".format(df['rock_age'][idx])
+    if classes is not None and probas is not None:
+        print classes[idx*4:idx*4+4]
+        print probas[idx*4:idx*4+4]
+    ax.set_xticks([]); ax.set_yticks([]); ax2.set_xticks([]); ax2.set_yticks([])
+    ax3.set_xticks([]); ax3.set_yticks([]); ax4.set_xticks([]); ax4.set_yticks([])
+    plt.show()
+
+def find_locations_nearest_10(source_idx, direction):
+    column_direction = 'nearest_10_neighbors_euclidean_' + direction
+    nearest_image_idx = df[column_direction][source_idx]
+    nearest_locs = np.array([(df['lat'][idx], df['lng'][idx]) for idx in nearest_image_idx])
+    return nearest_locs
 
 def random_file_pull(df, yield_all_info = False):
     ''' Generate a random filename from the database. Good
@@ -332,7 +371,8 @@ def calc_avg_color(df):
     cols_to_write = ['avg_r_up', 'avg_r_low', 'avg_g_up', 'avg_g_low', 'avg_b_up', 'avg_b_low']
     for col in cols_to_write:
         check_for_column(col)
-    for idx in range(10): #range(df.shape[0]):
+    for idx in range(df.shape[0]):
+        print idx
         r_up, r_low, g_up, g_low, b_up, b_low = [], [], [], [], [], []
         for cardinal_dir in NESW:
             im = imread(df['base_filename'][idx] + cardinal_dir + '.png')
@@ -348,6 +388,7 @@ def calc_avg_color(df):
         df['avg_g_low'][idx] = np.mean(g_low)
         df['avg_b_up'][idx] = np.mean(b_up)
         df['avg_b_low'][idx] = np.mean(b_low)
+
 
 
 if __name__ == '__main__':
