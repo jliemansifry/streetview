@@ -44,6 +44,16 @@ def download_images(df):
             count += 1
             save_image((lt,lg), heading)
 
+def write_mountains_cities_plains(df):
+    cities = reduce(np.intersect1d, [np.where(df['elev'] > 1300), np.where(df['elev'] < 2400), np.where(df['lat'] > 38.6), np.where(df['lng'] > -105.25), np.where(df['lng'] < -104.2)])
+    not_cities = np.setdiff1d(np.arange(len(df)), cities)
+    plains = reduce(np.intersect1d, [not_cities, np.where(df['lng'] > -105.25), np.where(df['elev'] < 1800)])
+    not_plains = np.setdiff1d(np.arange(len(df)), plains)
+    mountains = reduce(np.intersect1d, [not_cities, not_plains, np.where(df['lng'] < -104.2)])
+    df['cities'] = df.index.isin(cities)
+    df['mountains'] = df.index.isin(mountains)
+    df['plains'] = df.index.isin(plains)
+
 def plot_3d(df, style = 'scatter', show = True):
     ''' Plot all the locations in lat/lng/elev space. 
     Just for fun to see all of the downloaded locations. '''
@@ -54,12 +64,19 @@ def plot_3d(df, style = 'scatter', show = True):
     ax.set_zlabel('elevation (m)', rotation = 90)
     # ab = np.where(df['elev_gt_1800'] == True)[0]
     # be = np.where(df['elev_gt_1800'] == False)[0]
-    ab = np.where(df['elev'] > 2100)[0]
-    be = np.where(df['elev'] < 2100)[0]
+    # ab = np.where(df['elev'] > 2100)[0]
+    # be = np.where(df['elev'] < 2100)[0]
+    cities = reduce(np.intersect1d, [np.where(df['elev'] > 1300), np.where(df['elev'] < 2400), np.where(df['lat'] > 38.6), np.where(df['lng'] > -105.25), np.where(df['lng'] < -104.2)])
+    not_cities = np.setdiff1d(np.arange(len(df)), cities)
+    plains = reduce(np.intersect1d, [not_cities, np.where(df['lng'] > -105.25), np.where(df['elev'] < 1800)])
+    not_plains = np.setdiff1d(np.arange(len(df)), plains)
+    mountains = reduce(np.intersect1d, [not_cities, not_plains, np.where(df['lng'] < -104.2)])
+    #plains = reduce(np.intersect1d, [not_cities, np.where(df['lng'] > -105.25), np.where(df['elev'] < 1600)])
     if show:
         if style == 'scatter':
-            ax.scatter(df.lat[be], df.lng[be], df.elev[be], color = 'k', s = 1)#['k'] * len(be), s = [1] * len(ab))
-            ax.scatter(df.lat[ab], df.lng[ab], df.elev[ab], color = 'r', s = 1)# ['r'] * len(ab), s = [1] * len(ab))
+            ax.scatter(df.lat[cities], df.lng[cities], df.elev[cities], color = 'k', s = 1)#['k'] * len(be), s = [1] * len(ab))
+            ax.scatter(df.lat[plains], df.lng[plains], df.elev[plains], color = 'r', s = 1)# ['r'] * len(ab), s = [1] * len(ab))
+            ax.scatter(df.lat[mountains], df.lng[mountains], df.elev[mountains], color = 'g', s = 1)# ['r'] * len(ab), s = [1] * len(ab))
             plt.gca().invert_yaxis()
         if style == 'wireframe':
             ordered_lat = df.lat[np.lexsort((df.lat.values, df.lng.values))].values
