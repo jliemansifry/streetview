@@ -3,9 +3,12 @@ no_heading_images/*
 data/*
 small_data_subset/*
 small_data_subset
+big_list*
+ubuntu*
 *.pyc
 *.swp
 *ec2_gpu.pem
+models/*
 big_list_with_road_colorhists.csv
 big_list_with_nearest10*
 shapefiles/*
