@@ -1,4 +1,5 @@
 from keras.models import Sequential
+from keras.layers.core import Merge
 from organizedImageData import write_filenames
 import pandas as pd
 import numpy as np
@@ -7,6 +8,7 @@ from keras.models import model_from_json
 from keras.layers.core import Dense, Dropout, Activation, Flatten
 from keras.layers.convolutional import Convolution2D, MaxPooling2D
 # from keras.optimizers import SGD
+
 def load_data():
     df = pd.read_pickle("big_list_with_only_4_rock_classes_thru_14620.pkl")
     write_filenames(df, options = 'data_80x50')
@@ -37,7 +39,7 @@ def load_data():
     #X_test /= 255.
     return df, X, all_y_data, category_name, categories, count
 
-def add_model_params(model,categories):
+def add_model_params(model, categories):
     model_params = {'batch_size': 64,
                     'nb_classes': 2,
                     'nb_epoch': 16,
@@ -98,14 +100,33 @@ def load_model(model_name):
     model.load_weights(model_name + 'weights.h5')
     return model
 
+def concat_models(*args):
+    models = [model for model in args]
+    how_many_models = len(models)
+    model = Sequential()
+    model.add(Merge(models, mode = 'concat', concat_axis = 1))
+    model.add(Dense(10))
+    model.add(Activation('softmax'))
+    return model, how_many_models
+
+def run_concat_model(model, how_many_models, X, y):
+    model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
+    model.fit([X] * how_many_models, y, batch_size=128, nb_epoch=20)
+    return model
+
 def predict(X, model):
     classes = model.predict_classes(X, batch_size=32)
     proba = model.predict_proba(X, batch_size=32)
     return classes, proba
 
+def write_to_df(proba, categories, write_to_df = None, df = None):
+    reshaped_probas = proba.reshape((proba.shape[0]/4., 4*proba.shape[1]))
+    if df is None:
+        df = pd.DataFrame(reshaped_probas)
+    else:
+        pass
+
 if __name__ == '__main__':
     df, X, y, category_name, categories, count = load_data()
-    #model = load_model('models/elev_gt_1800_64_batch_16_epoch_14621_locations_256x3x3_128x3x3_128x3x3_conv_2x2__layers23pool_seedset_model_arch')
-    #model = load_model('models/elev_gt_1800_64_batch_16_epoch_14621_locations_256x3x3_128x3x3_128x3x3_conv_2x2__layers23pool_seedset_model_weights.h5')
     model = load_model('models/elev_gt_1800_64_batch_16_epoch_14621_locations_256x3x3_128x3x3_128x3x3_conv_2x2__layers23pool_seedset_model_')
     classes, proba = predict(X, model)
