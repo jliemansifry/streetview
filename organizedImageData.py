@@ -8,8 +8,11 @@ import cv2
 import pandas as pd
 import numpy as np
 # from imageProcessor import ColorDescriptor
+# import matplotlib
+# matplotlib.use("Agg")
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
+from matplotlib import animation
 from imageScraper import save_image, get_date
 from coloradoGIS import load_geologic_history, load_features_and_shape, find_which_feature
 from imageAnalysisFunctions import corner_frac, surf, cv2_image, sklearn_hog
@@ -57,11 +60,12 @@ def write_mountains_cities_plains(df):
     #df['plains'] = df.index.isin(plains)
     print len(cities) + len(plains) + len(mountains)
 
-def plot_3d(df, style = 'scatter', show = True):
+def plot_3d(df, style = 'scatter', show = True, options = 'normal'):
     ''' Plot all the locations in lat/lng/elev space. 
     Just for fun to see all of the downloaded locations. '''
     fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
+    #ax = fig.add_subplot(111, projection='3d')
+    ax = Axes3D(fig)
     ax.set_xlabel('lat') 
     ax.set_ylabel('lng')
     ax.set_zlabel('elevation (m)', rotation = 90)
@@ -75,11 +79,19 @@ def plot_3d(df, style = 'scatter', show = True):
     not_plains = np.setdiff1d(np.arange(len(df)), plains)
     mountains = reduce(np.intersect1d, [not_cities, not_plains, np.where(df['lng'] < -104.2)])
     #plains = reduce(np.intersect1d, [not_cities, np.where(df['lng'] > -105.25), np.where(df['elev'] < 1600)])
-    if show:
+    #if show:
+    def show():
         if style == 'scatter':
-            ax.scatter(df.lat[cities], df.lng[cities], df.elev[cities], color = 'k', s = 1)#['k'] * len(be), s = [1] * len(ab))
-            ax.scatter(df.lat[plains], df.lng[plains], df.elev[plains], color = 'r', s = 1)# ['r'] * len(ab), s = [1] * len(ab))
-            ax.scatter(df.lat[mountains], df.lng[mountains], df.elev[mountains], color = 'g', s = 1)# ['r'] * len(ab), s = [1] * len(ab))
+            if options == 'mcp':
+                ax.scatter(df.lat[cities], df.lng[cities], df.elev[cities], color = 'k', s = 1)
+                ax.scatter(df.lat[plains], df.lng[plains], df.elev[plains], color = 'r', s = 1)
+                ax.scatter(df.lat[mountains], df.lng[mountains], df.elev[mountains], color = 'g', s = 1)
+            else:
+                ax.scatter(df.lat, df.lng, df.elev, color = 'k', s = 1)
+
+            ax.set_xlabel('Latitude ($^{\circ}$)')
+            ax.set_ylabel('Longitude ($^{\circ}$)')
+            ax.set_zlabel('Elevation (meters)')
             plt.gca().invert_yaxis()
         if style == 'wireframe':
             ordered_lat = df.lat[np.lexsort((df.lat.values, df.lng.values))].values
@@ -89,6 +101,14 @@ def plot_3d(df, style = 'scatter', show = True):
             xe, ye = np.meshgrid(ordered_elev, ordered_elev)
             ax.plot_trisurf(df.lat.values[::10], df.lng.values[::10], df.elev.values[::10], cmap=cm.jet, linewidth=0.2) 
         plt.show()
+    def animate(i):
+        ax.view_init(elev = 45., azim = i)
+    anim = animation.FuncAnimation(fig, animate, init_func=show,
+                                   frames=1080, interval=20, blit=False)
+    anim.save('data_animation_rotation_dpi200_45deg_newlabels2.mp4', fps=30, extra_args=['-vcodec', 'libx264'], dpi = 200)
+    # t = animation.Animation.to_html5_video(anim); return t; if you wanted to embed
+    # this video as an html5 video
+    #return t
 
 def make_hist(cd, img):
     ''' Make a 3D HSV histogram as described by the chosen
@@ -152,16 +172,17 @@ def play_with_surf_and_cornerfrac(df):
 
 def play_hog(df):
     ''' Pull 20 images, compute HOG, and display it. '''
-    some_random_files = [random_file_pull(df).next() for _ in range(20)]
-    for img_name in some_random_files:
+    some_random_files = [random_file_pull(df, yield_all_info = True).next() for _ in range(20)]
+    for idx, direction, img_name in some_random_files:
+        print idx, direction, img_name
+        plt.clf()
         features, hog_img = sklearn_hog(img_name)
-        # plt.clf()
         fig = plt.figure(figsize = (16,8))
         ax = fig.add_subplot(1,2,1)
         ax.imshow(cv2_image(img_name))
         ax2 = fig.add_subplot(1,2,2)
         ax2.imshow(hog_img)
-        plt.show()
+        fig.show()
     return hog_img
 
 def play_color_likeness(df):
@@ -207,12 +228,6 @@ def play_color_likeness(df):
         ax4.set_xlim(-109.5, -102.5)
         ax4.set_ylim(37, 41)
         plt.show()
-
-def find_locations_nearest_10(source_idx, direction):
-    column_direction = 'nearest_10_neighbors_euclidean_' + direction
-    nearest_image_idx = df[column_direction][source_idx]
-    nearest_locs = np.array([(df['lat'][idx], df['lng'][idx]) for idx in nearest_image_idx])
-    return nearest_locs
 
 def write_dates(df):
     ''' Filled in missing dates after downloading images before 
