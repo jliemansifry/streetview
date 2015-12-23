@@ -6,6 +6,7 @@ small_data_subset
 big_list*
 ubuntu*
 *animation*
+images_for_presentation*
 *.pyc
 *.swp
 *ec2_gpu.pem
