@@ -1,4 +1,5 @@
 import numpy as np
+from matplotlib import animation
 from matplotlib.colors import hsv_to_rgb
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
@@ -98,11 +99,7 @@ class ColorDescriptor(object):
         cv2.waitKey(0)
         cv2.destroyAllWindows()
     
-    def plot3d_hsv(self, image, subsample = 200, show = True, base_ax = None, alpha = 0.7):
-        ''' Plot a sampling of the colors of the image in HSV space (in 3d). 
-        'hsv' gives the location of pixels in HSV color space, and 'rgb' 
-        keeps track of the colors of these pixels for plotting
-        in matplotlib. '''
+    def get_hsv_xyz(self, image):
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
         rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB) / 255.0
         (h, w) = image.shape[:2]
@@ -117,21 +114,43 @@ class ColorDescriptor(object):
         x = sat * np.cos(np.radians(hue) * 2)
         y = sat * np.sin(np.radians(hue) * 2)
         z = val
+        return x, y, z, rgb
+
+    def plot3d_hsv(self, image, image2 = None, subsample = 200, show_plot = True, base_ax = None, animate = False, alpha = 0.7, saveas = 'you_should_rename_this'):
+        ''' Plot a sampling of the colors of the image in HSV space (in 3d). 
+        'hsv' gives the location of pixels in HSV color space, and 'rgb' 
+        keeps track of the colors of these pixels for plotting
+        in matplotlib. '''
+        x, y, z, rgb = self.get_hsv_xyz(image)
+        if image2 is not None:
+            x2, y2, z2, rgb2 = self.get_hsv_xyz(image2)
+
         if base_ax is None: 
             ''' Set up fig and ax if nothing is given. Otherwise, overplot the new image
             on the previous one. If show == True, nothing will be returned. '''
             fig = plt.figure()
-            ax = fig.add_subplot(111, projection = '3d')
-            # ax.set_xticks([]); ax.set_yticks([]); ax.set_zticks([]); 
-            # ax.w_xaxis.set_ticklabels([]); ax.w_yaxis.set_ticklabels([]); ax.w_zaxis.set_ticklabels([])
-            ax.scatter(x[::subsample], y[::subsample], z[::subsample], color = rgb[::subsample], marker = "s", alpha = alpha)
-        else: 
-            ax = base_ax
-            ax.scatter(x[::subsample], y[::subsample], z[::subsample], color = rgb[::subsample], marker = '*', alpha = alpha)
-        if show:
+            # ax = fig.add_subplot(111, projection = '3d')
+            ax = Axes3D(fig)
+            ax.set_xticks([]); ax.set_yticks([]); ax.set_zticks([]); 
+            ax.w_xaxis.set_ticklabels([]); ax.w_yaxis.set_ticklabels([]); ax.w_zaxis.set_ticklabels([])
+        def show():
+            ax.scatter(x[::subsample], y[::subsample], z[::subsample], c = rgb[::subsample], marker = "o", lw = 0.2, s = 70, alpha = alpha)
+            ax.scatter(x2[::subsample], y2[::subsample], z2[::subsample], c = rgb2[::subsample], marker = "d", lw = 0.2, s = 70, alpha = alpha)
+        # else: 
+            # ax = base_ax
+            # ax.scatter(x[::subsample], y[::subsample], z[::subsample], c = rgb[::subsample], marker = 's', alpha = alpha)
+        if animate:
+            def animate(i):
+                ax.view_init(elev = 60., azim = i)
+            anim = animation.FuncAnimation(fig, animate, init_func=show,
+                                        frames=720, interval=20, blit=False)
+            anim.save(saveas + '.mp4', fps=30, extra_args=['-vcodec', 'libx264'], dpi = 200)
+        if show_plot:
+            ax.scatter(x[::subsample], y[::subsample], z[::subsample], c = rgb[::subsample], marker = "o", lw = 0.2, s = 70, alpha = alpha)
+            ax.scatter(x2[::subsample], y2[::subsample], z2[::subsample], c = rgb2[::subsample], marker = "d", lw = 0.2, s = 70, alpha = alpha)
+            plt.show()
             # ax.text(280, 0, 150, "Value", fontsize = 20, zdir = (0,0,1))
             # ax.text(210, -300, 0, "Hue", fontsize = 20, zdir = (0,0,0))
             # ax.text2D(.54, .66, "Saturation ->", fontsize = 16, transform = ax.transAxes)
-            plt.show()
         else:
             return ax
