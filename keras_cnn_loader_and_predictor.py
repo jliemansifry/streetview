@@ -12,11 +12,11 @@ from keras.layers.convolutional import Convolution2D, MaxPooling2D
 
 def load_data(category_name):
     ''' 
-    INPUT: string: The category name that is being predicted
-    OUTPUT: 1) df: The full Pandas DataFrame that was loaded and used
-            2) 4D numpy array: All X data (# of images x RGB x height x width)
-            3) 1D numpy array: All y data (target category indices)
-            4) list: corresponding category names to (3)
+    INPUT:  (1) string: The category name that is being predicted
+    OUTPUT: (1) df: The full Pandas DataFrame that was loaded and used
+            (2) 4D numpy array: All X data (# of images x RGB x height x width)
+            (3) 1D numpy array: All y data (target category indices)
+            (4) list: corresponding category names to (3)
     '''
     df = pd.read_pickle("big_list_with_only_4_rock_classes_thru_14620.pkl")
     write_filenames(df, options = 'data_80x50')
@@ -55,11 +55,16 @@ def load_data(category_name):
     X /= 255.
     return df, X, all_y_data, categories
 
-def load_models(model_name, categories):
+def load_models(model_name):
     ''' 
-    INPUT: (1) string. the full path to the model weights and architecture
-           (2) list of categories
-    OUTPUT: The N, E, S, and W models with trained weights and architecture.
+    INPUT:  (1) string: the full path to the model weights and architecture
+    OUTPUT: (1) The N, E, S, and W models with 
+                trained weights and architecture.
+
+    Four Sequential model objects are created. The appropriate model 
+    structure is read from a json file created during training, 
+    then the trained weights are loaded onto this structure.
+    All four models are returned.
     '''    
     modelN = Sequential(); modelE = Sequential()
     modelS = Sequential(); modelW = Sequential()
@@ -74,11 +79,30 @@ def load_models(model_name, categories):
     return modelN, modelE, modelS, modelW
 
 def get_activations(model, layer, X_batch):
+    ''' 
+    INPUT:  (1) Keras Sequential model object
+            (2) integer: The layer to extract weights from
+            (3) 4D numpy array: All the X data you wish to extract 
+                activations for
+    OUTPUT: (1) Activations for that layer
+    '''
     get_activations = theano.function([model.layers[0].input], model.layers[layer].get_output(train=False), allow_input_downcast=True)
     activations = get_activations(X_batch) # same result as above
     return activations
 
 def get_merged_activations(modelN, modelE, modelS, modelW, X):
+    ''' 
+    INPUT:  (1) Keras Sequential model object: North
+            (2) Keras Sequential model object: East
+            (3) Keras Sequential model object: South
+            (4) Keras Sequential model object: West
+            (5) 4D numpy array: All the X data
+    OUTPUT: (1) numpy array: vertically stacked activations for the 4 models
+    
+    The activations for the final layer of each model are calcualted,
+    then vertically stacked. These are the activations that are feeding
+    into the merged model. Not actually used, but good to have a grasp of. 
+    '''
     N_activations = get_activations(modelN, 12, X[::4])
     E_activations = get_activations(modelE, 12, X[1::4])
     S_activations = get_activations(modelS, 12, X[2::4])
@@ -87,14 +111,19 @@ def get_merged_activations(modelN, modelE, modelS, modelW, X):
     return final_layer
 
 def build_merged_model_from_previous(categories, *args):
+    ''' 
+    INPUT:  (1) list of categories
+            (2) args: N, E, S, and W Keras Sequential model objects
+    OUTPUT: (1) Merged keras model object with additional 
+    '''
     models = [model_dir for model_dir in args]
-    model = Sequential()
-    model.add(Merge(models, mode = 'concat'))
-    model.add(Dense(256))
-    model.add(Activation('relu'))
-    model.add(Dropout(0.5))
-    model.add(Dense(len(categories)))
-    model.add(Activation('softmax'))
+    # model = Sequential()
+    # model.add(Merge(models, mode = 'concat'))
+    # model.add(Dense(256))
+    # model.add(Activation('relu'))
+    # model.add(Dropout(0.5))
+    # model.add(Dense(len(categories)))
+    # model.add(Activation('softmax'))
     model = model_from_json(open(model_name + 'merge_model_arch.json').read())
     model.load_weights(model_name + 'merge_model_weights.h5')
     model.compile(loss='categorical_crossentropy', optimizer='adadelta')
@@ -115,7 +144,7 @@ def build_merged_model_as_standalone(X_merged, model_name, categories):
 def return_specified_proba(X, idx, categories, NESW_merged = None):
     model_name = 'models/county/_NESW_dense256_relu_drop05_dense3_/county_64_batch_16_epoch_14621_NESW_dense256_relu_drop05_dense3_'
     if NESW_merged is None:
-        modelN, modelE, modelS, modelW = load_models(model_name, categories)
+        modelN, modelE, modelS, modelW = load_models(model_name)
         NESW_merged = build_merged_model_from_previous(categories, modelN, modelE, modelS, modelW)
     N_idx = idx * 4; E_idx = idx * 4 + 1
     S_idx = idx * 4 + 2; W_idx = idx * 4 + 3
