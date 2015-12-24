@@ -51,8 +51,6 @@ def load_data(category_name):
     #X_test /= 255.
     return df, X, all_y_data, category_name, categories, count
 
-## still will need to add Xy processing in order to extract all weights
-
 def add_model_params(model, categories):
     model_params = {'batch_size': 64,
                     #'nb_classes': 2,
@@ -77,7 +75,6 @@ def add_model_params(model, categories):
                     # 'Dense4': len(categories),
                     # 'Activation5': 'softmax'}
     print model_params
-
     what_to_add = [Convolution2D(model_params['Convolution2D1'][0], # 0
                             model_params['Convolution2D1'][1],
                             model_params['Convolution2D1'][2],
@@ -106,17 +103,15 @@ def add_model_params(model, categories):
     for process in what_to_add:
         model.add(process)
     model.compile(loss='categorical_crossentropy', optimizer='adadelta')
-    return model, what_to_add, model_params
+    return model #, what_to_add, model_params
 
-def load_model(model_name):
-    modelN = Sequential()
-    modelE = Sequential()
-    modelS = Sequential()
-    modelW = Sequential()
-    modelN, what_to_add, model_params = add_model_params(modelN, categories)
-    modelE, what_to_add, model_params = add_model_params(modelE, categories)
-    modelS, what_to_add, model_params = add_model_params(modelS, categories)
-    modelW, what_to_add, model_params = add_model_params(modelW, categories)
+def load_model(model_name, categories):
+    modelN = Sequential(); modelE = Sequential()
+    modelS = Sequential(); modelW = Sequential()
+    modelN = add_model_params(modelN, categories)
+    modelE = add_model_params(modelE, categories)
+    modelS = add_model_params(modelS, categories)
+    modelW = add_model_params(modelW, categories)
     modelN = model_from_json(open(model_name + 'N_model_arch.json').read())
     modelE = model_from_json(open(model_name + 'E_model_arch.json').read())
     modelS = model_from_json(open(model_name + 'S_model_arch.json').read())
@@ -127,7 +122,20 @@ def load_model(model_name):
     modelW.load_weights(model_name + 'W_model_weights.h5')
     return modelN, modelE, modelS, modelW
 
-def build_merged_model_from_previous(*args):
+def get_activations(model, layer, X_batch):
+    get_activations = theano.function([model.layers[0].input], model.layers[layer].get_output(train=False), allow_input_downcast=True)
+    activations = get_activations(X_batch) # same result as above
+    return activations
+
+def get_merged_activations(modelN, modelE, modelS, modelW, X):
+    N_activations = get_activations(modelN, 12, X[::4])
+    E_activations = get_activations(modelE, 12, X[1::4])
+    S_activations = get_activations(modelS, 12, X[2::4])
+    W_activations = get_activations(modelW, 12, X[3::4])
+    final_layer = np.vstack((N_activations, E_activations, S_activations, W_activations))
+    return final_layer
+
+def build_merged_model_from_previous(categories, *args):
     models = [model_dir for model_dir in args]
     model = Sequential()
     model.add(Merge(models, mode = 'concat'))
@@ -136,15 +144,12 @@ def build_merged_model_from_previous(*args):
     model.add(Dropout(0.5))
     model.add(Dense(len(categories)))
     model.add(Activation('softmax'))
+    model = model_from_json(open(model_name + 'merge_model_arch.json').read())
+    model.load_weights(model_name + 'merge_model_weights.h5')
     model.compile(loss='categorical_crossentropy', optimizer='adadelta')
-    how_many_models = len(models)
-    # model = Sequential()
-    # model.add(Merge(models, mode = 'concat', concat_axis = 1))
-    # model.add(Dense(10))
-    # model.add(Activation('softmax'))
-    return model, how_many_models
+    return model
 
-def build_merged_model(X_merged, model_name):
+def build_merged_model_as_standalone(X_merged, model_name, categories):
     model = Sequential()
     model.add(Dense(64, input_dim = X_merged.shape[0]))
     model.add(Activation('relu'))
@@ -156,45 +161,22 @@ def build_merged_model(X_merged, model_name):
     model.compile(loss='categorical_crossentropy', optimizer='adadelta')
     return model
 
-def run_concat_model(model, how_many_models, X, y):
-    model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
-    model.fit([X] * how_many_models, y, batch_size=128, nb_epoch=20)
-    return model
-
-def get_activations(model, layer, X_batch):
-    get_activations = theano.function([model.layers[0].input], model.layers[layer].get_output(train=False), allow_input_downcast=True)
-    activations = get_activations(X_batch) # same result as above
-    return activations
-
-def get_merged_activations(modelN, modelE, modelS, modelW, X_batch):
-    N_activations = get_activations(modelN, 12, X[::4])
-    E_activations = get_activations(modelE, 12, X[1::4])
-    S_activations = get_activations(modelS, 12, X[2::4])
-    W_activations = get_activations(modelW, 12, X[3::4])
-    final_layer = np.vstack((N_activations, E_activations, S_activations, W_activations))
-    return final_layer
-
-def predict(X, model):
-    classes = model.predict_classes(X, batch_size=32)
-    proba = model.predict_proba(X, batch_size=32)
-    #cla = model.predict_classes(X, batch_size=32)
-    pro = model._predict(X, batch_size=32)
-    return classes, proba, pro
-
-def write_to_df(proba, categories, write_to_df = None, df = None):
-    reshaped_probas = proba.reshape((proba.shape[0]/4., 4*proba.shape[1]))
-    if df is None:
-        df = pd.DataFrame(reshaped_probas)
-    else:
-        pass
+def return_specified_proba(X, idx, categories, NESW_merged = None):
+    model_name = 'models/county/_NESW_dense256_relu_drop05_dense3_/county_64_batch_16_epoch_14621_NESW_dense256_relu_drop05_dense3_'
+    if NESW_merged is None:
+        modelN, modelE, modelS, modelW = load_model(model_name, categories)
+        NESW_merged = build_merged_model_from_previous(categories, modelN, modelE, modelS, modelW)
+    N_idx = idx * 4; E_idx = idx * 4 + 1
+    S_idx = idx * 4 + 2; W_idx = idx * 4 + 3
+    end_idx = idx * 4 + 4
+    final_probas = NESW_merged.predict_proba([X[N_idx:end_idx:4], X[E_idx:end_idx:4], X[S_idx:end_idx:4], X[W_idx:end_idx:4]], batch_size = 1)
+    return final_probas
 
 if __name__ == '__main__':
     df, X, y, category_name, categories, count = load_data('county')
     model_name = 'models/county/_NESW_dense256_relu_drop05_dense3_/county_64_batch_16_epoch_14621_NESW_dense256_relu_drop05_dense3_'
-    #model = load_model('models/elev_gt_1800_64_batch_16_epoch_14621_locations_256x3x3_128x3x3_128x3x3_conv_2x2__layers23pool_seedset_model_')
-    modelN, modelE, modelS, modelW = load_model(model_name)
+    #modelN, modelE, modelS, modelW = load_model(model_name)
     #X_merged = get_merged_activations(modelN, modelE, modelS, modelW, X)
-    #NESW = build_merged_model(X_merged, model_name)
-    NESW_merged, how_many_models = build_merged_model_from_previous(modelN, modelE, modelS, modelW)
-    final_probas = NESW_merged.predict_proba([X[::4], X[1::4], X[2::4], X[3::4]], batch_size = 32)
-    #classes, proba, pro = predict(X, model)
+    #NESW = build_merged_model_as_standalone(X_merged, model_name, categories)
+    #NESW_merged = build_merged_model_from_previous(modelN, modelE, modelS, modelW)
+    #final_probas = NESW_merged.predict_proba([X[::4], X[1::4], X[2::4], X[3::4]], batch_size = 32)
