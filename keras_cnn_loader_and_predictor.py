@@ -59,7 +59,7 @@ def load_models(model_name):
     ''' 
     INPUT:  (1) string: the full path to the model weights and architecture
     OUTPUT: (1) The N, E, S, and W models with 
-                trained weights and architecture.
+                trained weights and architecture
 
     Four Sequential model objects are created. The appropriate model 
     structure is read from a json file created during training, 
@@ -130,6 +130,16 @@ def build_merged_model_from_previous(categories, *args):
     return model
 
 def build_merged_model_as_standalone(X_merged, model_name, categories):
+    ''' 
+    INPUT:  (1) numpy array: Activations from the N, E, S, and W models
+            (2) string: full path to the model
+            (3) list of categories
+    OUTPUT: (1) Keras model object that hasn't been created from merge
+                of the N, E, S, and W models
+                
+    Turns out this doesn't really work. Leaving it in because spoon-feeding
+    the model the activations from the previous layers may be important
+    later. '''
     model = Sequential()
     model.add(Dense(64, input_dim = X_merged.shape[0]))
     model.add(Activation('relu'))
