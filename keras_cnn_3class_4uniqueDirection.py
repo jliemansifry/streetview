@@ -38,6 +38,46 @@ def load_data():
             sub_idx += 1
     return df, all_X_data, all_y_data, category_name, categories, count
 
+def load_data(category_name):
+    df = pd.read_pickle("big_list_with_only_4_rock_classes_thru_14620.pkl")
+    write_filenames(df, options = 'data_80x50')
+    NESW = ['N', 'E', 'S', 'W']
+    count = 50#df.shape[0]#6000 # just a test for now
+    all_X_data = np.zeros((count*4, 50, 80, 3))
+    if category_name == 'elev_gt_1800':
+        categories = [False, True]
+    elif category_name == 'county':
+        categories = list(df['county'].unique())
+    elif category_name == 'mcp':
+        categories = 'mcp'
+    #categories = ['0-5', '5-20', '20-250', '250-500', '500-3000']
+    all_y_data = np.zeros(count*4)
+    print 'Loading data...'
+    for df_idx in xrange(count):
+        sub_idx = 0
+        for cardinal_dir in NESW:
+            image_name = df.iloc[df_idx]['base_filename'] + cardinal_dir + '80x50.png'
+            image_data = imread(image_name)
+            #image_class = categories.index(df.iloc[df_idx]['rock_age'])
+            if category_name == 'elev_gt_1800' or category_name == 'mcp':
+                image_class = categories.index(df.iloc[df_idx][category_name])
+            elif category_name == 'county':
+                cnty = df.iloc[df_idx][category_name]
+                if pd.isnull(cnty):
+                    image_class = 65
+                else:
+                    image_class = categories.index(cnty)
+            idx_to_write = df_idx * 4 + sub_idx
+            all_X_data[idx_to_write] = image_data
+            all_y_data[idx_to_write] = image_class
+            sub_idx += 1
+    X = all_X_data.reshape(all_X_data.shape[0], 3, 50, 80)
+    #X_test = all_X_data.reshape(X_test.shape[0], 3, model_params['img_rows'], model_params['img_cols'])
+    X = X.astype('float32')
+    #X_test = X_test.astype('float32')
+    X /= 255.
+    #X_test /= 255.
+ 
 def process_Xy(X, y, idx_offset, model_params):
     split_train, split_test = len(X) * 0.9, len(X) * 0.1
     X_train, X_test = X[split_test+idx_offset::4], X[idx_offset:split_test:4]
