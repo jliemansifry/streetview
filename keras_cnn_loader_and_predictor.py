@@ -11,6 +11,13 @@ from keras.layers.convolutional import Convolution2D, MaxPooling2D
 # from keras.optimizers import SGD
 
 def load_data(category_name):
+    ''' 
+    INPUT: string: The category name that is being predicted
+    OUTPUT: 1) df: The full Pandas DataFrame that was loaded and used
+            2) 4D numpy array: All X data (# of images x RGB x height x width)
+            3) 1D numpy array: All y data (target category indices)
+            4) list: corresponding category names to (3)
+    '''
     df = pd.read_pickle("big_list_with_only_4_rock_classes_thru_14620.pkl")
     write_filenames(df, options = 'data_80x50')
     NESW = ['N', 'E', 'S', 'W']
@@ -48,67 +55,14 @@ def load_data(category_name):
     X /= 255.
     return df, X, all_y_data, categories
 
-def add_model_params(model, categories):
-    model_params = {'batch_size': 64,
-                    #'nb_classes': 2,
-                    'nb_epoch': 16,
-                    'img_rows': 50,
-                    'img_cols': 80,
-                    'Convolution2D1': (256, 3, 3),
-                    'Activation1': 'relu',
-                    #'MaxPooling2D1': (2, 2),
-                    'Convolution2D2': (128, 3, 3),
-                    'Activation2': 'relu',
-                    'MaxPooling2D2': (2, 2),
-                    #'Dropout2': 0.25,
-                    'Convolution2D3': (128, 3, 3),
-                    'Activation3': 'relu',
-                    'MaxPooling2D3': (2, 2),
-                    'Dropout3': 0.25,
-                    'Flatten3': '',
-                    'Dense3': 64,
-                    'Activation4': 'relu',
-                    'Dropout4': 0.5}
-                    # 'Dense4': len(categories),
-                    # 'Activation5': 'softmax'}
-    print model_params
-    what_to_add = [Convolution2D(model_params['Convolution2D1'][0], # 0
-                            model_params['Convolution2D1'][1],
-                            model_params['Convolution2D1'][2],
-                            border_mode='valid',
-                            input_shape=(3, model_params['img_rows'], model_params['img_cols'])),
-                  Activation(model_params['Activation1']), # 1
-                  #MaxPooling2D(pool_size=model_params['MaxPooling2D1']),
-                  Convolution2D(model_params['Convolution2D2'][0], # 2
-                            model_params['Convolution2D2'][1],
-                            model_params['Convolution2D2'][2]),
-                  Activation(model_params['Activation2']), # 3
-                  MaxPooling2D(pool_size=model_params['MaxPooling2D2']), # 4
-                  #Dropout(model_params['Dropout2']),
-                  Convolution2D(model_params['Convolution2D3'][0], # 5
-                            model_params['Convolution2D3'][1],
-                            model_params['Convolution2D3'][2]),
-                  Activation(model_params['Activation3']), # 6
-                  MaxPooling2D(pool_size=model_params['MaxPooling2D3']), # 7
-                  Dropout(model_params['Dropout3']), # 8 
-                  Flatten(), # 9
-                  Dense(model_params['Dense3']), # 10
-                  Activation(model_params['Activation4']), # 11
-                  Dropout(model_params['Dropout4'])] # 12
-                  # Dense(model_params['Dense4']), # 13
-                  # Activation(model_params['Activation5'])] # 14
-    for process in what_to_add:
-        model.add(process)
-    model.compile(loss='categorical_crossentropy', optimizer='adadelta')
-    return model #, what_to_add, model_params
-
-def load_model(model_name, categories):
+def load_models(model_name, categories):
+    ''' 
+    INPUT: (1) string. the full path to the model weights and architecture
+           (2) list of categories
+    OUTPUT: The N, E, S, and W models with trained weights and architecture.
+    '''    
     modelN = Sequential(); modelE = Sequential()
     modelS = Sequential(); modelW = Sequential()
-    modelN = add_model_params(modelN, categories)
-    modelE = add_model_params(modelE, categories)
-    modelS = add_model_params(modelS, categories)
-    modelW = add_model_params(modelW, categories)
     modelN = model_from_json(open(model_name + 'N_model_arch.json').read())
     modelE = model_from_json(open(model_name + 'E_model_arch.json').read())
     modelS = model_from_json(open(model_name + 'S_model_arch.json').read())
@@ -161,7 +115,7 @@ def build_merged_model_as_standalone(X_merged, model_name, categories):
 def return_specified_proba(X, idx, categories, NESW_merged = None):
     model_name = 'models/county/_NESW_dense256_relu_drop05_dense3_/county_64_batch_16_epoch_14621_NESW_dense256_relu_drop05_dense3_'
     if NESW_merged is None:
-        modelN, modelE, modelS, modelW = load_model(model_name, categories)
+        modelN, modelE, modelS, modelW = load_models(model_name, categories)
         NESW_merged = build_merged_model_from_previous(categories, modelN, modelE, modelS, modelW)
     N_idx = idx * 4; E_idx = idx * 4 + 1
     S_idx = idx * 4 + 2; W_idx = idx * 4 + 3
@@ -172,7 +126,7 @@ def return_specified_proba(X, idx, categories, NESW_merged = None):
 if __name__ == '__main__':
     df, X, y, categories = load_data('county')
     model_name = 'models/county/_NESW_dense256_relu_drop05_dense3_/county_64_batch_16_epoch_14621_NESW_dense256_relu_drop05_dense3_'
-    #modelN, modelE, modelS, modelW = load_model(model_name)
+    #modelN, modelE, modelS, modelW = load_models(model_name)
     #X_merged = get_merged_activations(modelN, modelE, modelS, modelW, X)
     #NESW = build_merged_model_as_standalone(X_merged, model_name, categories)
     #NESW_merged = build_merged_model_from_previous(modelN, modelE, modelS, modelW)
