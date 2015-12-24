@@ -152,6 +152,15 @@ def build_merged_model_as_standalone(X_merged, model_name, categories):
     return model
 
 def return_specified_proba(X, idx, categories, NESW_merged = None):
+    ''' 
+    INPUT:  (1) 4D numpy array: All X data
+            (2) integer: index to determine probabilities for
+            (3) list of categories
+            (4) optional previously loaded model 
+
+    Return the probabilities associated with each category that the model
+    has been trained on for a specific location in the dataset. 
+    '''
     model_name = 'models/county/_NESW_dense256_relu_drop05_dense3_/county_64_batch_16_epoch_14621_NESW_dense256_relu_drop05_dense3_'
     if NESW_merged is None:
         modelN, modelE, modelS, modelW = load_models(model_name)
