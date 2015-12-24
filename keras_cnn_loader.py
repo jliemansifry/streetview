@@ -127,7 +127,7 @@ def load_model(model_name):
     modelW.load_weights(model_name + 'W_model_weights.h5')
     return modelN, modelE, modelS, modelW
 
-def concat_models(*args):
+def build_merged_model_from_previous(*args):
     models = [model_dir for model_dir in args]
     model = Sequential()
     model.add(Merge(models, mode = 'concat'))
@@ -136,6 +136,7 @@ def concat_models(*args):
     model.add(Dropout(0.5))
     model.add(Dense(len(categories)))
     model.add(Activation('softmax'))
+    model.compile(loss='categorical_crossentropy', optimizer='adadelta')
     how_many_models = len(models)
     # model = Sequential()
     # model.add(Merge(models, mode = 'concat', concat_axis = 1))
@@ -143,18 +144,35 @@ def concat_models(*args):
     # model.add(Activation('softmax'))
     return model, how_many_models
 
+def build_merged_model(X_merged, model_name):
+    model = Sequential()
+    model.add(Dense(64, input_dim = X_merged.shape[0]))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(len(categories)))
+    model.add(Activation('softmax'))
+    model = model_from_json(open(model_name + 'merge_model_arch.json').read())
+    model.load_weights(model_name + 'merge_model_weights.h5')
+    model.compile(loss='categorical_crossentropy', optimizer='adadelta')
+    return model
+
 def run_concat_model(model, how_many_models, X, y):
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
     model.fit([X] * how_many_models, y, batch_size=128, nb_epoch=20)
     return model
 
-def get_activations(model, layer, X_batch, NESW = False):
-    if NESW == True:
-        get_activations = theano.function([model.layers[0].input], model.layers[layer].get_output(train=False), allow_input_downcast=True)
-    else:
-        get_activations = theano.function([model.layers[0].input], model.layers[layer].get_output(train=False), allow_input_downcast=True)
+def get_activations(model, layer, X_batch):
+    get_activations = theano.function([model.layers[0].input], model.layers[layer].get_output(train=False), allow_input_downcast=True)
     activations = get_activations(X_batch) # same result as above
     return activations
+
+def get_merged_activations(modelN, modelE, modelS, modelW, X_batch):
+    N_activations = get_activations(modelN, 12, X[::4])
+    E_activations = get_activations(modelE, 12, X[1::4])
+    S_activations = get_activations(modelS, 12, X[2::4])
+    W_activations = get_activations(modelW, 12, X[3::4])
+    final_layer = np.vstack((N_activations, E_activations, S_activations, W_activations))
+    return final_layer
 
 def predict(X, model):
     classes = model.predict_classes(X, batch_size=32)
@@ -172,8 +190,11 @@ def write_to_df(proba, categories, write_to_df = None, df = None):
 
 if __name__ == '__main__':
     df, X, y, category_name, categories, count = load_data('county')
+    model_name = 'models/county/_NESW_dense256_relu_drop05_dense3_/county_64_batch_16_epoch_14621_NESW_dense256_relu_drop05_dense3_'
     #model = load_model('models/elev_gt_1800_64_batch_16_epoch_14621_locations_256x3x3_128x3x3_128x3x3_conv_2x2__layers23pool_seedset_model_')
-    modelN, modelE, modelS, modelW = load_model('models/county/_NESW_dense256_relu_drop05_dense3_/county_64_batch_16_epoch_14621_NESW_dense256_relu_drop05_dense3_')
-    model, how_many_models = concat_models(modelN, modelE, modelS, modelW)
-
+    modelN, modelE, modelS, modelW = load_model(model_name)
+    #X_merged = get_merged_activations(modelN, modelE, modelS, modelW, X)
+    #NESW = build_merged_model(X_merged, model_name)
+    NESW_merged, how_many_models = build_merged_model_from_previous(modelN, modelE, modelS, modelW)
+    final_probas = NESW_merged.predict_proba([X[::4], X[1::4], X[2::4], X[3::4]], batch_size = 32)
     #classes, proba, pro = predict(X, model)
