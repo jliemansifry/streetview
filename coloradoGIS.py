@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import shapely
 import shapefile
+import matplotlib
 from matplotlib.patches import Polygon, PathPatch
 from matplotlib.collections import PatchCollection, LineCollection
 from imagePresentationFunctions import make_cmyk_greyscale_continuous_cmap
@@ -57,14 +58,14 @@ def plot_shapefile(f, options = 'counties', more_options = None, cm = 'blues', d
     elif more_options == 'by_probability':
         max_proba = max(probas_dict.values())
         num_colors = 101
+        proba_range = np.linspace(0.0, max_proba, num_colors)
 
     ## COLOR MAPS ##
     if cm == 'blues':
-        cm = plt.get_cmap('Blues')
-        colormap = [cm(1.*i/num_colors) for i in range(num_colors)]
+        cmap = plt.get_cmap('Blues')
     elif cm == 'continuous':
-        cont_cmap = make_cmyk_greyscale_continuous_cmap()
-        colormap = [cont_cmap(1.*i/num_colors) for i in range(num_colors)]
+        cmap = make_cmyk_greyscale_continuous_cmap()
+    discrete_colormap = [cmap(1.*i/num_colors) for i in range(num_colors)]
 
     ## LOOP THROUGH SHAPEFILES ##
     for info, shape in zip(m.state_info, m.state):
@@ -88,16 +89,16 @@ def plot_shapefile(f, options = 'counties', more_options = None, cm = 'blues', d
                 pc = patch_collection(shape)
                 proba = probas_dict[county_name]
                 proba_idx = int(proba / max_proba * 100)
-                pc.set_color(colormap[proba_idx])
+                pc.set_color(discrete_colormap[proba_idx])
             else:
                 pc = patch_collection(shape)
-                pc.set_color(random.choice(colormap))
+                pc.set_color(random.choice(discrete_colormap))
 
         elif options == 'rocktypes':
             rocktype = info['ROCKTYPE1']
             idx = np.where(rocks == rocktype)[0][0]
             pc = patch_collection(shape)
-            pc.set_color(colormap[idx])
+            pc.set_color(discrete_colormap[idx])
         elif options == 'geologic_history':
             rock_age = info['UNIT_AGE']
             for index, (r, r_plus1) in enumerate(zip(ranges[:-1], ranges[1:])):
@@ -108,14 +109,22 @@ def plot_shapefile(f, options = 'counties', more_options = None, cm = 'blues', d
                 except: 
                     idx = 2 #20-250 was a good middleground for nans
             pc = patch_collection(shape)
-            pc.set_color(colormap[idx])
+            pc.set_color(discrete_colormap[idx])
         elif options == 'nofill':
             pc = patch_collection(shape)
             pc.set_facecolor('none')
         else:
             pc = patch_collection(shape)
-            pc.set_color(random.choice(colormap))
+            pc.set_color(random.choice(discrete_colormap))
         ax.add_collection(pc)
+        if more_options == 'by_probability':
+            ax2 = fig.add_axes([0.82, 0.1, 0.03, 0.8])
+            cb = matplotlib.colorbar.ColorbarBase(ax2, cmap = cmap, 
+                    ticks = proba_range, boundaries = proba_range, format = '%1i')
+            labels = [str(round(proba, 4)) 
+                      if idx % 10 == 0 else ''
+                      for idx, proba in enumerate(proba_range)]
+            cb.ax.set_yticklabels(labels)
     # lt, lg = m(-105.5, 39) # test overplot a point
     # m.plot(lt, lg, 'bo', markersize = 24)
     plt.show()
