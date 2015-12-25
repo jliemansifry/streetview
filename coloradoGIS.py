@@ -1,4 +1,5 @@
 import pandas as pd
+import cv2
 from mpl_toolkits.basemap import Basemap
 from pyproj import Proj, transform
 import fiona
@@ -10,11 +11,12 @@ import shapefile
 import matplotlib
 from matplotlib.patches import Polygon, PathPatch, Patch
 from matplotlib.collections import PatchCollection, LineCollection
+from scipy.misc import imread
 from imagePresentationFunctions import make_cmyk_greyscale_continuous_cmap
 import random
 import shapely.geometry as sg
 
-def plot_shapefile(f, options = 'counties', more_options = None, cm = 'blues', df = None, probas_dict = None, true_county = None):
+def plot_shapefile(f, options = 'counties', more_options = None, cm = 'blues', df = None, probas_dict = None, true_idx = None):
     ''' 
     INPUT:  (1) string: shapefile to use
             (2) string: options to specify that build a nice plot
@@ -41,8 +43,8 @@ def plot_shapefile(f, options = 'counties', more_options = None, cm = 'blues', d
     ax = fig.add_subplot(111, axisbg='w', frame_on=False)
     m = Basemap(width=800000,height=550000, resolution='l', projection='aea',
                 lat_1=37.,lat_2=41,lon_0=-105.55,lat_0=39)
-    m.readshapefile(f, name = 'state')
-
+    m.readshapefile(f, name = 'state', color = 'none')
+    
     ## OPTIONS ##
     if options == 'rocktypes':
         rocks= np.unique([shape_info['ROCKTYPE1']
@@ -75,10 +77,10 @@ def plot_shapefile(f, options = 'counties', more_options = None, cm = 'blues', d
 
         ## OPTIONS OF HOW TO PLOT THE SHAPEFILE##
         if options == 'counties':
-            if info['STATE_NAME'] != 'Colorado':
-                continue # ignore shapefiles from out of CO
             county_name = info['COUNTY_NAM']
-            print county_name
+            state_name = info['STATE_NAME']
+            if state_name != 'Colorado':
+                continue # ignore shapefiles from out of CO
 
             ## MORE OPTIONS FOR COUNTIES ##
             if more_options == 'by_img_color':
@@ -91,7 +93,8 @@ def plot_shapefile(f, options = 'counties', more_options = None, cm = 'blues', d
                 proba = probas_dict[county_name]
                 proba_idx = int(proba / max_proba * 100)
                 pc.set_color(discrete_colormap[proba_idx])
-                if county_name == true_county:
+                pc.set_edgecolor('k')
+                if county_name == df['county'][true_idx]:
                     pc.set_hatch('//')
                     pc.set_edgecolor('w')
             else:
@@ -114,18 +117,33 @@ def plot_shapefile(f, options = 'counties', more_options = None, cm = 'blues', d
             pc.set_facecolor('none')
         else:
             pc.set_color(random.choice(discrete_colormap))
-        ax.add_collection(pc)
         if more_options == 'by_probability':
-            ax2 = fig.add_axes([0.82, 0.1, 0.03, 0.8])
+            ax2 = fig.add_axes([0.78, 0.1, 0.03, 0.8])
             cb = matplotlib.colorbar.ColorbarBase(ax2, cmap = cmap, 
                     ticks = proba_range, boundaries = proba_range, format = '%1i')
             labels = [str(round(proba, 4)) 
                       if idx % 10 == 0 else ''
                       for idx, proba in enumerate(proba_range)]
             cb.ax.set_yticklabels(labels)
+            cb.ax.set_ylabel('Probability')
+        ax.add_collection(pc)
+            
+    NESW = ['N', 'E', 'S', 'W']
+    filenames = [df['base_filename'][true_idx] + cardinal_dir + '.png' 
+                 for cardinal_dir in NESW]
+    if more_options == 'by_probability':
+        def add_image(filename, y, label):
+            ax_to_add = fig.add_axes([0., y, .32, .20])
+            ax_to_add.imshow(imread(filename))
+            ax_to_add.set_xticks([]); ax_to_add.set_yticks([])
+            ax_to_add.set_ylabel(label)
+        y = 0.7
+        labels = ['North', 'East', 'South', 'West']
+        for filename, label in zip(filenames, labels):
+            add_image(filename, y, label)
+            y -= 0.2
     # lt, lg = m(-105.5, 39) # test overplot a point
     # m.plot(lt, lg, 'bo', markersize = 24)
-    plt.savefig('/Users/jliemansifry/Desktop/counties_savefig_direct.png', dpi = 200)
     plt.show()
 
 def patch_collection(shape):
