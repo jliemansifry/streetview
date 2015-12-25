@@ -21,7 +21,7 @@ def load_data(category_name):
     df = pd.read_pickle("big_list_with_only_4_rock_classes_thru_14620.pkl")
     write_filenames(df, options = 'data_80x50')
     NESW = ['N', 'E', 'S', 'W']
-    count = 50 #df.shape[0]#6000 # just a test for now
+    count = df.shape[0]
     all_X_data = np.zeros((count*4, 50, 80, 3))
     if category_name == 'elev_gt_1800':
         categories = [False, True]
@@ -143,13 +143,16 @@ def return_specified_proba(X, idx, model_name, categories, NESW_merged = None):
     INPUT:  (1) 4D numpy array: All X data
             (2) integer: index to determine probabilities for
             (3) string: the full path to the model name
-            (4) optional previously loaded model 
+            (4) list: all categories
+            (5) optional previously loaded model 
+    OUTPUT: (1) dict: categories and their associated probabilities
 
     Return the probabilities associated with each category that the model
     has been trained on for a specific location in the dataset. 
     If no model has been specified, return the model as well so that it does 
     not need to be reloaded in the future.
     '''
+    model_built = False
     if NESW_merged is None:
         model_built = True
         NESW_merged = build_merged_model(model_name)
