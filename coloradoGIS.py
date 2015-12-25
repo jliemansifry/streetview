@@ -13,63 +13,91 @@ from imagePresentationFunctions import make_cmyk_greyscale_continuous_cmap
 import random
 import shapely.geometry as sg
 
-def plot_shapefile(f, options = 'counties', cm = 'blues', df = None):
+def plot_shapefile(f, options = 'counties', more_options = None, cm = 'blues', df = None, probas_dict = None):
+    ''' 
+    INPUT:  (1) string: shapefile to use
+            (2) string: options to specify that build a nice plot
+                        'counties' or 'rocktypes' or 'geologic_history' 
+                        'counties' will plot the counties of just CO, 
+                        even though this shapefile includes some counties
+                        in neighboring states
+                        'rocktypes' will plot all distinct rocktypes in CO
+                        'geologic_history' plots the rocktypes by age
+                        rather than unique type (4 age ranges rather than
+                        29 primary rocktypes)
+            (3) string: more options that specify for counties what colors 
+                        to plot
+                        'by_img_color' or 'by_probability'
+                        'by_img_color' will plot the avg color of each img
+                        'by_probability' will plot scale the colormap to 
+                        reflect the probability that a given image is 
+            (4) string: colormap to specify
+                        'blues' or 'continuous'
+                        'blues' is easy on the eyes for random assignment
+                        'continuous' is good for probabilities
+                        '''
     fig = plt.figure(figsize=(20,10))
     ax = fig.add_subplot(111, axisbg='w', frame_on=False)
     m = Basemap(width=800000,height=550000, resolution='l', projection='aea',
                 lat_1=37.,lat_2=41,lon_0=-105.55,lat_0=39)
     m.readshapefile(f, name = 'state')
+
+    ## OPTIONS ##
     if options == 'rocktypes':
         rocks= np.unique([shape_info['ROCKTYPE1']
                           for shape_info in m.state_info])
-    if options == 'geologic_history':
+        num_colors = len(rocks)
+    elif options == 'geologic_history':
         geologic_time_dictionary = load_geologic_history()
-        ranges = [0, 5, 20, 250, 500, 3000] # in Myr
+        ranges = [0, 5, 20, 250, 3000] # in Myr
         all_ranges = []
         for r, r_plus1 in zip(ranges[:-1], ranges[1:]):
             all_ranges += [str(r) + '-' + str(r_plus1)]
-        rocks = all_ranges
-    num_colors = 10 # len(rocks)
+        num_colors = len(all_ranges)
+    elif more_options == 'by_probability':
+        max_proba = max(probas_dict.values())
+        num_colors = 101
+
+    ## COLOR MAPS ##
     if cm == 'blues':
         cm = plt.get_cmap('Blues')
-        blues = [cm(1.*i/num_colors) for i in range(num_colors)]
-    else:
+        colormap = [cm(1.*i/num_colors) for i in range(num_colors)]
+    elif cm == 'continuous':
         cont_cmap = make_cmyk_greyscale_continuous_cmap()
-        blues = [cont_cmap(1.*i/num_colors) for i in range(num_colors)]
+        colormap = [cont_cmap(1.*i/num_colors) for i in range(num_colors)]
+
+    ## LOOP THROUGH SHAPEFILES ##
     for info, shape in zip(m.state_info, m.state):
+
+        ## OPTIONS OF HOW TO PLOT THE SHAPEFILE##
         if options == 'counties':
             if info['STATE_NAME'] != 'Colorado':
-                continue
+                continue # ignore shapefiles from out of CO
             county_name = info['COUNTY_NAM']
             print county_name
-            locs = np.where(df['county'] == county_name)[0]
-            r_avg = df['avg_r_low'][locs].mean()
-            g_avg = df['avg_g_low'][locs].mean()
-            b_avg = df['avg_b_low'][locs].mean()
-            patches = [Polygon(np.array(shape), True)]
-            pc = PatchCollection(patches, edgecolor='k', hatch = None, 
-                                 linewidths=0.5, zorder=2)
 
-            # sh = sg.asShape(np.array(shape))
-            # r_avg, g_avg, b_avg= [], [], []
-            # for idx in range(10): #range(df.shape[0]):
-                # print idx
-                # coord = zip(df['lng'][idx], df['lat'][idx])
-                # if sh.contains(shapely.geometry.Point(coord)):
-                # r_avg += [df['avg_r_low'][idx] / 255.]
-                # g_avg += [df['avg_g_low'][idx] / 255.]
-                # b_avg += [df['avg_b_low'][idx] / 255.]
-                # if r_avg == []:
-                    # r_avg, g_avg, b_avg = 0., 0., 0.
-            # pc.set_color(random.choice(blues))
-            pc.set_color((r_avg/255., g_avg/255., b_avg/255.))
+            ## MORE OPTIONS FOR COUNTIES ##
+            if more_options == 'by_img_color':
+                locs = np.where(df['county'] == county_name)[0]
+                r_avg = df['avg_r_low'][locs].mean()
+                g_avg = df['avg_g_low'][locs].mean()
+                b_avg = df['avg_b_low'][locs].mean()
+                pc = patch_collection(shape)
+                pc.set_color((r_avg/255., g_avg/255., b_avg/255.))
+            elif more_options == 'by_probability':
+                pc = patch_collection(shape)
+                proba = probas_dict[county_name]
+                proba_idx = int(proba / max_proba * 100)
+                pc.set_color(colormap[proba_idx])
+            else:
+                pc = patch_collection(shape)
+                pc.set_color(random.choice(colormap))
+
         elif options == 'rocktypes':
             rocktype = info['ROCKTYPE1']
             idx = np.where(rocks == rocktype)[0][0]
-            patches = [Polygon(np.array(shape), True)]
-            pc = PatchCollection(patches, edgecolor='k', linewidths=.5, 
-                                 zorder=2)
-            pc.set_color(blues[idx])
+            pc = patch_collection(shape)
+            pc.set_color(colormap[idx])
         elif options == 'geologic_history':
             rock_age = info['UNIT_AGE']
             for index, (r, r_plus1) in enumerate(zip(ranges[:-1], ranges[1:])):
@@ -79,24 +107,24 @@ def plot_shapefile(f, options = 'counties', cm = 'blues', df = None):
                         idx = index 
                 except: 
                     idx = 2 #20-250 was a good middleground for nans
-            patches = [Polygon(np.array(shape), True)]
-            pc = PatchCollection(patches, edgecolor='k', linewidths=.5, 
-                                zorder=2)
-            pc.set_color(blues[idx])
+            pc = patch_collection(shape)
+            pc.set_color(colormap[idx])
         elif options == 'nofill':
-            patches = [Polygon(np.array(shape), True)]
-            pc = PatchCollection(patches, edgecolor='k', hatch = None, 
-                                 linewidths=0.5, zorder=2)
+            pc = patch_collection(shape)
             pc.set_facecolor('none')
         else:
-            patches = [Polygon(np.array(shape), True)]
-            pc = PatchCollection(patches, edgecolor='k', hatch = None, 
-                                 linewidths=0.5, zorder=2)
-            pc.set_color(random.choice(blues))
+            pc = patch_collection(shape)
+            pc.set_color(random.choice(colormap))
         ax.add_collection(pc)
     # lt, lg = m(-105.5, 39) # test overplot a point
     # m.plot(lt, lg, 'bo', markersize = 24)
     plt.show()
+
+def patch_collection(shape):
+    patches = [Polygon(np.array(shape), True)]
+    pc = PatchCollection(patches, edgecolor='k', hatch = None, 
+                         linewidths=0.5, zorder=2)
+    return pc
 
 def plot_this_shapefile(version):
     if version == 'county':
