@@ -66,8 +66,6 @@ def load_models(model_name):
     then the trained weights are loaded onto this structure.
     All four models are returned.
     '''    
-    modelN = Sequential(); modelE = Sequential()
-    modelS = Sequential(); modelW = Sequential()
     modelN = model_from_json(open(model_name + 'N_model_arch.json').read())
     modelE = model_from_json(open(model_name + 'E_model_arch.json').read())
     modelS = model_from_json(open(model_name + 'S_model_arch.json').read())
@@ -87,7 +85,7 @@ def get_activations(model, layer, X_batch):
     OUTPUT: (1) numpy array: Activations for that layer
     '''
     get_activations = theano.function([model.layers[0].input], model.layers[layer].get_output(train=False), allow_input_downcast=True)
-    activations = get_activations(X_batch) # same result as above
+    activations = get_activations(X_batch)
     return activations
 
 def get_merged_activations(modelN, modelE, modelS, modelW, X):
@@ -140,18 +138,16 @@ def test_equality_of_build_methods(model, modelN):
     print 'It is {} that the weights are the same'.format(all(
         merged_layer_weights[7] == N_weights[7]))
 
-def return_specified_proba(X, idx, categories, NESW_merged = None):
+def return_specified_proba(X, idx, model_name, NESW_merged = None):
     ''' 
     INPUT:  (1) 4D numpy array: All X data
             (2) integer: index to determine probabilities for
-            (3) list of categories
+            (3) string: the full path to the model name
             (4) optional previously loaded model 
     Return the probabilities associated with each category that the model
     has been trained on for a specific location in the dataset. 
     '''
-    model_name = 'models/county/_NESW_dense256_relu_drop05_dense3_/county_64_batch_16_epoch_14621_NESW_dense256_relu_drop05_dense3_'
     if NESW_merged is None:
-        modelN, modelE, modelS, modelW = load_models(model_name)
         NESW_merged = build_merged_model(model_name)
     N_idx = idx * 4; E_idx = idx * 4 + 1
     S_idx = idx * 4 + 2; W_idx = idx * 4 + 3
@@ -165,5 +161,4 @@ if __name__ == '__main__':
     # modelN, modelE, modelS, modelW = load_models(model_name)
     #X_merged = get_merged_activations(modelN, modelE, modelS, modelW, X)
     #NESW = build_merged_model_as_standalone(X_merged, model_name, categories)
-    #NESW_merged = build_merged_model(modelN, modelE, modelS, modelW)
     #final_probas = NESW_merged.predict_proba([X[::4], X[1::4], X[2::4], X[3::4]], batch_size = 32)
