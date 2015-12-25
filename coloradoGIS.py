@@ -14,7 +14,7 @@ from imagePresentationFunctions import make_cmyk_greyscale_continuous_cmap
 import random
 import shapely.geometry as sg
 
-def plot_shapefile(f, options = 'counties', more_options = None, cm = 'blues', df = None, probas_dict = None):
+def plot_shapefile(f, options = 'counties', more_options = None, cm = 'blues', df = None, probas_dict = None, true_county = None):
     ''' 
     INPUT:  (1) string: shapefile to use
             (2) string: options to specify that build a nice plot
@@ -89,6 +89,8 @@ def plot_shapefile(f, options = 'counties', more_options = None, cm = 'blues', d
                 proba = probas_dict[county_name]
                 proba_idx = int(proba / max_proba * 100)
                 pc.set_color(discrete_colormap[proba_idx])
+                if county_name == true_county:
+                    pc.set_hatch('/////')
             else:
                 pc.set_color(random.choice(discrete_colormap))
         elif options == 'rocktypes':
