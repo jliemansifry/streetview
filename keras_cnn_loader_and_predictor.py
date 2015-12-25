@@ -138,7 +138,7 @@ def test_equality_of_build_methods(model, modelN):
     print 'It is {} that the weights are the same'.format(all(
         merged_layer_weights[7] == N_weights[7]))
 
-def return_specified_proba(X, idx, model_name, model = None):
+def return_specified_proba(X, idx, model_name, categories, NESW_merged = None):
     ''' 
     INPUT:  (1) 4D numpy array: All X data
             (2) integer: index to determine probabilities for
@@ -150,15 +150,17 @@ def return_specified_proba(X, idx, model_name, model = None):
     If no model has been specified, return the model as well so that it does 
     not need to be reloaded in the future.
     '''
-    if model is None:
+    if NESW_merged is None:
+        model_built = True
         NESW_merged = build_merged_model(model_name)
     N_idx = idx * 4; E_idx = idx * 4 + 1
     S_idx = idx * 4 + 2; W_idx = idx * 4 + 3
     end_idx = idx * 4 + 4
     final_probas = NESW_merged.predict_proba([X[N_idx:end_idx:4], X[E_idx:end_idx:4], X[S_idx:end_idx:4], X[W_idx:end_idx:4]], batch_size = 1)[0]
-    if model is None:
-        return final_probas, NESW_merged
-    return final_probas # return 1D array
+    probas_dict = {c: p for c, p in zip(categories, final_probas)}
+    if model_built:
+        return probas_dict, NESW_merged
+    return probas_dict
 
 if __name__ == '__main__':
     df, X, y, categories = load_data('county')
