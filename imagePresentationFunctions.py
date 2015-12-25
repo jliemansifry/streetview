@@ -29,7 +29,10 @@ def make_cmyk_greyscale_continuous_cmap():
     'heatmap' style plots. It is continuous in cmyk, rgb, and greyscale. 
     The new matplotlib has colormaps that do this, but I wrote this before
     that version was released. '''
-    colors = [(255,255,255),(248,255,255),(240,255,255),(210,253,255),(184,252,255),
+    # colors = [(255,255,255),(248,255,255),(240,255,255),(210,253,255),(184,252,255),
+            # (192,244,204),(155,255,145),(210,200,12),(230,180,7),(236,124,13),
+            # (233,100,25),(228,30,45),(198,0,46),(103,0,51)] 
+    colors = [(255,255,255),(210,253,255),(184,252,255),
             (192,244,204),(155,255,145),(210,200,12),(230,180,7),(236,124,13),
             (233,100,25),(228,30,45),(198,0,46),(103,0,51)] 
     cont_cmap = make_cmap(colors, bit=True)
