@@ -69,6 +69,7 @@ def plot_shapefile(f, options = 'counties', more_options = None, cm = 'blues', d
 
     ## LOOP THROUGH SHAPEFILES ##
     for info, shape in zip(m.state_info, m.state):
+        pc = patch_collection(shape)
 
         ## OPTIONS OF HOW TO PLOT THE SHAPEFILE##
         if options == 'counties':
@@ -83,21 +84,16 @@ def plot_shapefile(f, options = 'counties', more_options = None, cm = 'blues', d
                 r_avg = df['avg_r_low'][locs].mean()
                 g_avg = df['avg_g_low'][locs].mean()
                 b_avg = df['avg_b_low'][locs].mean()
-                pc = patch_collection(shape)
                 pc.set_color((r_avg/255., g_avg/255., b_avg/255.))
             elif more_options == 'by_probability':
-                pc = patch_collection(shape)
                 proba = probas_dict[county_name]
                 proba_idx = int(proba / max_proba * 100)
                 pc.set_color(discrete_colormap[proba_idx])
             else:
-                pc = patch_collection(shape)
                 pc.set_color(random.choice(discrete_colormap))
-
         elif options == 'rocktypes':
             rocktype = info['ROCKTYPE1']
             idx = np.where(rocks == rocktype)[0][0]
-            pc = patch_collection(shape)
             pc.set_color(discrete_colormap[idx])
         elif options == 'geologic_history':
             rock_age = info['UNIT_AGE']
@@ -108,13 +104,10 @@ def plot_shapefile(f, options = 'counties', more_options = None, cm = 'blues', d
                         idx = index 
                 except: 
                     idx = 2 #20-250 was a good middleground for nans
-            pc = patch_collection(shape)
             pc.set_color(discrete_colormap[idx])
         elif options == 'nofill':
-            pc = patch_collection(shape)
             pc.set_facecolor('none')
         else:
-            pc = patch_collection(shape)
             pc.set_color(random.choice(discrete_colormap))
         ax.add_collection(pc)
         if more_options == 'by_probability':
