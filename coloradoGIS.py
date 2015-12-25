@@ -97,6 +97,8 @@ def plot_shapefile(f, options = 'counties', more_options = None, cm = 'blues', d
                 if county_name == df['county'][true_idx]:
                     pc.set_hatch('//')
                     pc.set_edgecolor('w')
+                    pc.set_hatch('\\')
+                    pc.set_edgecolor('k')
             else:
                 pc.set_color(random.choice(discrete_colormap))
         elif options == 'rocktypes':
