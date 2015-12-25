@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import shapely
 import shapefile
 import matplotlib
-from matplotlib.patches import Polygon, PathPatch
+from matplotlib.patches import Polygon, PathPatch, Patch
 from matplotlib.collections import PatchCollection, LineCollection
 from imagePresentationFunctions import make_cmyk_greyscale_continuous_cmap
 import random
@@ -65,6 +65,8 @@ def plot_shapefile(f, options = 'counties', more_options = None, cm = 'blues', d
         cmap = plt.get_cmap('Blues')
     elif cm == 'continuous':
         cmap = make_cmyk_greyscale_continuous_cmap()
+    else:
+        cmap = plt.get_cmap(cm)
     discrete_colormap = [cmap(1.*i/num_colors) for i in range(num_colors)]
 
     ## LOOP THROUGH SHAPEFILES ##
@@ -90,7 +92,8 @@ def plot_shapefile(f, options = 'counties', more_options = None, cm = 'blues', d
                 proba_idx = int(proba / max_proba * 100)
                 pc.set_color(discrete_colormap[proba_idx])
                 if county_name == true_county:
-                    pc.set_hatch('/////')
+                    pc.set_hatch('//')
+                    pc.set_edgecolor('w')
             else:
                 pc.set_color(random.choice(discrete_colormap))
         elif options == 'rocktypes':
@@ -122,6 +125,7 @@ def plot_shapefile(f, options = 'counties', more_options = None, cm = 'blues', d
             cb.ax.set_yticklabels(labels)
     # lt, lg = m(-105.5, 39) # test overplot a point
     # m.plot(lt, lg, 'bo', markersize = 24)
+    plt.savefig('/Users/jliemansifry/Desktop/counties_savefig_direct.png', dpi = 200)
     plt.show()
 
 def patch_collection(shape):
