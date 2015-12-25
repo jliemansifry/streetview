@@ -84,7 +84,7 @@ def get_activations(model, layer, X_batch):
             (2) integer: The layer to extract weights from
             (3) 4D numpy array: All the X data you wish to extract 
                 activations for
-    OUTPUT: (1) Activations for that layer
+    OUTPUT: (1) numpy array: Activations for that layer
     '''
     get_activations = theano.function([model.layers[0].input], model.layers[layer].get_output(train=False), allow_input_downcast=True)
     activations = get_activations(X_batch) # same result as above
@@ -110,46 +110,35 @@ def get_merged_activations(modelN, modelE, modelS, modelW, X):
     final_layer = np.vstack((N_activations, E_activations, S_activations, W_activations))
     return final_layer
 
-def build_merged_model_from_previous(categories, *args):
+def build_merged_model(model_name):
     ''' 
-    INPUT:  (1) list of categories
-            (2) args: N, E, S, and W Keras Sequential model objects
-    OUTPUT: (1) Merged keras model object with additional 
+    INPUT:  (1) string: the full path to the model weights and architechure
+    OUTPUT: (1) Merged keras model
     '''
-    models = [model_dir for model_dir in args]
-    # model = Sequential()
-    # model.add(Merge(models, mode = 'concat'))
-    # model.add(Dense(256))
-    # model.add(Activation('relu'))
-    # model.add(Dropout(0.5))
-    # model.add(Dense(len(categories)))
-    # model.add(Activation('softmax'))
     model = model_from_json(open(model_name + 'merge_model_arch.json').read())
     model.load_weights(model_name + 'merge_model_weights.h5')
     model.compile(loss='categorical_crossentropy', optimizer='adadelta')
     return model
 
-def build_merged_model_as_standalone(X_merged, model_name, categories):
+def test_equality_of_build_methods(model, modelN):
     ''' 
-    INPUT:  (1) numpy array: Activations from the N, E, S, and W models
-            (2) string: full path to the model
-            (3) list of categories
-    OUTPUT: (1) Keras model object that hasn't been created from merge
-                of the N, E, S, and W models
-                
-    Turns out this doesn't really work. Leaving it in because spoon-feeding
-    the model the activations from the previous layers may be important
-    later. '''
-    model = Sequential()
-    model.add(Dense(64, input_dim = X_merged.shape[0]))
-    model.add(Activation('relu'))
-    model.add(Dropout(0.5))
-    model.add(Dense(len(categories)))
-    model.add(Activation('softmax'))
-    model = model_from_json(open(model_name + 'merge_model_arch.json').read())
-    model.load_weights(model_name + 'merge_model_weights.h5')
-    model.compile(loss='categorical_crossentropy', optimizer='adadelta')
-    return model
+    INPUT:  (1) NESW merged model, loaded from json and with trained weights
+            (2) N model, loaded from json and with trained weights
+    OUTPUT: None
+
+    This is a test to show that the process of building the merged model
+    from the N, E, S, and W models separately is equivalent to loading the 
+    merged model (NESW) from json with the trained weights. 
+
+    In other words, Keras makes rebuilding a model superbly easy, even
+    if this model is a merge of other models. It will keep track of all 
+    the structure and the trained weights for you.
+    '''
+    merged_layer = model.layers[0]
+    merged_layer_weights = merged_layer.get_weights()
+    N_weights = modelN.get_weights()
+    print 'It is {} that the weights are the same'.format(all(
+        merged_layer_weights[7] == N_weights[7]))
 
 def return_specified_proba(X, idx, categories, NESW_merged = None):
     ''' 
@@ -157,14 +146,13 @@ def return_specified_proba(X, idx, categories, NESW_merged = None):
             (2) integer: index to determine probabilities for
             (3) list of categories
             (4) optional previously loaded model 
-
     Return the probabilities associated with each category that the model
     has been trained on for a specific location in the dataset. 
     '''
     model_name = 'models/county/_NESW_dense256_relu_drop05_dense3_/county_64_batch_16_epoch_14621_NESW_dense256_relu_drop05_dense3_'
     if NESW_merged is None:
         modelN, modelE, modelS, modelW = load_models(model_name)
-        NESW_merged = build_merged_model_from_previous(categories, modelN, modelE, modelS, modelW)
+        NESW_merged = build_merged_model(model_name)
     N_idx = idx * 4; E_idx = idx * 4 + 1
     S_idx = idx * 4 + 2; W_idx = idx * 4 + 3
     end_idx = idx * 4 + 4
@@ -174,8 +162,8 @@ def return_specified_proba(X, idx, categories, NESW_merged = None):
 if __name__ == '__main__':
     df, X, y, categories = load_data('county')
     model_name = 'models/county/_NESW_dense256_relu_drop05_dense3_/county_64_batch_16_epoch_14621_NESW_dense256_relu_drop05_dense3_'
-    #modelN, modelE, modelS, modelW = load_models(model_name)
+    # modelN, modelE, modelS, modelW = load_models(model_name)
     #X_merged = get_merged_activations(modelN, modelE, modelS, modelW, X)
     #NESW = build_merged_model_as_standalone(X_merged, model_name, categories)
-    #NESW_merged = build_merged_model_from_previous(modelN, modelE, modelS, modelW)
+    #NESW_merged = build_merged_model(modelN, modelE, modelS, modelW)
     #final_probas = NESW_merged.predict_proba([X[::4], X[1::4], X[2::4], X[3::4]], batch_size = 32)
