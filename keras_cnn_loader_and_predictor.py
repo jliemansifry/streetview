@@ -8,6 +8,7 @@ from scipy.misc import imread
 from keras.models import model_from_json
 from keras.layers.core import Dense, Dropout, Activation, Flatten
 from keras.layers.convolutional import Convolution2D, MaxPooling2D
+from coloradoGIS import plot_shapefile
 # from keras.optimizers import SGD
 
 def load_data(category_name):
@@ -138,13 +139,15 @@ def test_equality_of_build_methods(model, modelN):
     print 'It is {} that the weights are the same'.format(all(
         merged_layer_weights[7] == N_weights[7]))
 
-def return_specified_proba(X, idx, model_name, categories, NESW_merged = None):
+def return_specified_proba(X, idx, model_name, categories, df, NESW_merged = None, show = False):
     ''' 
     INPUT:  (1) 4D numpy array: All X data
             (2) integer: index to determine probabilities for
             (3) string: the full path to the model name
             (4) list: all categories
-            (5) optional previously loaded model 
+            (5) df: to determine the true county
+            (6) optional previously loaded model 
+            (7) boolean: show the probabilities on a map?
     OUTPUT: (1) dict: categories and their associated probabilities
 
     Return the probabilities associated with each category that the model
@@ -161,9 +164,13 @@ def return_specified_proba(X, idx, model_name, categories, NESW_merged = None):
     end_idx = idx * 4 + 4
     final_probas = NESW_merged.predict_proba([X[N_idx:end_idx:4], X[E_idx:end_idx:4], X[S_idx:end_idx:4], X[W_idx:end_idx:4]], batch_size = 1)[0]
     probas_dict = {c: p for c, p in zip(categories, final_probas)}
-    if model_built:
-        return probas_dict, NESW_merged
-    return probas_dict
+    if show:
+        f = 'shapefiles/Shape/GU_CountyOrEquivalent'
+        plot_shapefile(f, options = 'counties', more_options = 'by_probability', cm = 'continuous', df = df, probas_dict = probas_dict, true_idx = idx)
+    else:
+        if model_built:
+            return probas_dict, NESW_merged
+        return probas_dict
 
 if __name__ == '__main__':
     df, X, y, categories = load_data('county')
