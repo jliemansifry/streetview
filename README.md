@@ -2,3 +2,4 @@
 
 ![](github.com/jliemansifry/streetview/images_for_project_overview/data_animation_gif.gif)
 ![](i.imgur.com/iRgT3CP.gif)
+![](http://i.imgur.com/iRgT3CP.gifv)
