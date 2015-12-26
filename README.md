@@ -8,9 +8,9 @@ The emerging field of feature recognition in images is revolutionizing how well 
 ![Image](/images_for_project_overview/data_animation_gif.gif)
 
 Below are a handful of examples of what the streetview images look like for a given location. The terrain (mountains, plains, etc.) and content (houses, trees, road type, cars, etc.) give clues as to the location in Colorado where each of these images were taken. These hints are easy for humans to pick up on, but difficult for computers. 
-![](/images_for_project_overview/pano_df_idx_5.png)
-![](/images_for_project_overview/pano_df_idx_25.png)
-![](/images_for_project_overview/pano_df_idx_150.png)
-![](/images_for_project_overview/pano_df_idx_250.png)
-![](/images_for_project_overview/pano_df_idx_340.png)
-![](/images_for_project_overview/pano_df_idx_3100.png)
+![Image](/images_for_project_overview/pano_df_idx_5.png)
+![Image](/images_for_project_overview/pano_df_idx_25.png)
+![Image](/images_for_project_overview/pano_df_idx_150.png)
+![Image](/images_for_project_overview/pano_df_idx_250.png)
+![Image](/images_for_project_overview/pano_df_idx_340.png)
+![Image](/images_for_project_overview/pano_df_idx_3100.png)
