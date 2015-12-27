@@ -43,7 +43,7 @@ Taking the images with the smallest euclidean distance between their color histo
 ![Image](/images_for_project_overview/pano_likeness_df_idx_221.png)
 ---------------------
 ![Image](/images_for_project_overview/pano_likeness_df_idx_3070.png) 
-![Image](/images_for_project_overview/pano_likeness_df_idx_2546.png)
+![Image](/images_for_project_overview/pano_likeness_df_idx_2536.png)
 
 
 
