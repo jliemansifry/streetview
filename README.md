@@ -24,9 +24,9 @@ Describing features in images is possible with a multitude of vector based metho
 
 Using a 3D color histogram allows us to describe the color density of various colors in our image. Rather than an RGB (red, green, blue) histogram, I analyzed the color distribution in HSV (hue, saturation, value) space, which represents colors in a way more similar to how humans perceive colors. The RGB color space is represented by a cube (linear additions and subtractions of each channel to form the output), whereas the HSV color space takes RGB intensities and maps them onto a cylinder. See images below. 
 
-![Image](/images_for_project_overview/RGB_cube.png =250x) ![Image](/images_for_project_overview/HSV_cylinder.png =250x)
+![Image](/images_for_project_overview/RGB_cube.png) ![Image](/images_for_project_overview/HSV_cylinder.png)
 
 The number of pixels that fall into a each HSV bin give a quantitative way of describing the color distribution of an image without needing to look at every pixel. A 960 component vector is created by sampling 4 regions in each image, with 8 hue bins, 8 saturation bins, and 3 value bins, and we are able to quantify the likeness between two (normalized) vectors using Euclidean distance. It is significantly easier to compare a vector of this length than one with 768,000 elements, which is what it would be if we were comparing each pixel between images (640pix by 400 pix by 3 colors). This process doesn't sacrifice much detail. In fact, it helps generalize the process, as binning the pixel intensities for each region allows us to compare the color distribution of a given *region* rather than by individual *pixels* between images. Two pictures now need not be nearly identical in order to have a high likeness; rather, only the color distribution of each region needs to be similar. 
 
-![Image](/images_for_project_overview/HSV_greener_usedincomplat_40.35530,long_-103.434_W .png =250x) ![Image](/images_for_project_overview/HSV_redder_usedincomp_lat_39.47983,long_-104.558_S.png =250x)
+![Image](/images_for_project_overview/HSV_greener_usedincomplat_40.35530,long_-103.434_W .png) ![Image](/images_for_project_overview/HSV_redder_usedincomp_lat_39.47983,long_-104.558_S.png)
 ![Image](/images_for_project_overview/HSV_image_comparison.gif)
