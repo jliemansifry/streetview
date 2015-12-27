@@ -33,3 +33,18 @@ The number of pixels that fall into a each HSV bin give a quantitative way of de
 Pixels from the image on the left (circles) and on the right (diamonds) are plotted below in HSV color space. This isn't exactly the HSV histogram described above (for which the bin counts would be difficult to visualize), but it gives us a sense of the color distribution in HSV space. The sky portion of each image is very similar, filling out the blue region of the HSV space, but the green and red ground colors occupy distinctly different regions in the cylinder. 
 
 ![Image](/images_for_project_overview/HSV_image_comparison.gif)
+
+Taking the images with the smallest euclidean distance between their color histogram vectors gives exciting results for determining where in Colorado a series of North, East, South, and West images was taken, as seen below. In each case, the first set are the 'search' images and the second set are the most similar set of images found in my database. Often, the result is a set of images taken on the same google street view drive, as can be seen in the third image, which displays a map of the true location, guessed location based on most similar set of images, and the nearest 9 after that. 
+
+![Image](/images_for_project_overview/pano_likeness_df_idx_5155.png) 
+![Image](/images_for_project_overview/pano_likeness_df_idx_5152.png)
+---------------------
+![Image](/images_for_project_overview/pano_likeness_df_idx_3647.png) 
+![Image](/images_for_project_overview/pano_likeness_df_idx_221.png)
+---------------------
+![Image](/images_for_project_overview/pano_likeness_df_idx_3070.png) 
+![Image](/images_for_project_overview/pano_likeness_df_idx_2546.png)
+
+
+
+
