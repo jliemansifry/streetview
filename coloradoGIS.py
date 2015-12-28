@@ -16,7 +16,7 @@ from imagePresentationFunctions import make_cmyk_greyscale_continuous_cmap
 import random
 import shapely.geometry as sg
 
-def plot_shapefile(f, options = 'counties', more_options = None, cm = 'blues', df = None, probas_dict = None, true_idx = None):
+def plot_shapefile(f, options = 'counties', more_options = None, cm = 'blues', df = None, probas_dict = None, true_idx = None, show = False, save = False):
     ''' 
     INPUT:  (1) string: shapefile to use
             (2) string: options to specify that build a nice plot
@@ -39,6 +39,7 @@ def plot_shapefile(f, options = 'counties', more_options = None, cm = 'blues', d
                         'blues' is easy on the eyes for random assignment
                         'continuous' is good for probabilities
                         '''
+    plt.clf() # clean slate
     fig = plt.figure(figsize=(20,10))
     ax = fig.add_subplot(111, axisbg='w', frame_on=False)
     m = Basemap(width=800000,height=550000, resolution='l', projection='aea',
@@ -146,7 +147,10 @@ def plot_shapefile(f, options = 'counties', more_options = None, cm = 'blues', d
             y -= 0.2
     # lt, lg = m(-105.5, 39) # test overplot a point
     # m.plot(lt, lg, 'bo', markersize = 24)
-    plt.show()
+    if save:
+        plt.savefig('model_testing/county_model_v1.0_' + str(df['county'][true_idx]) + '_idx_' + str(true_idx) + '.png', dpi = 150)
+    if show:
+        plt.show()
 
 def patch_collection(shape):
     patches = [Polygon(np.array(shape), True)]
