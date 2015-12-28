@@ -41,6 +41,12 @@ Taking the images with the smallest euclidean distance between their color histo
 ![Image](/images_for_project_overview/pano_likeness_grasslands.png) 
 ![Image](/images_for_project_overview/pano_likeness_all_3.png) 
 
+### Histograms of Oriented Gradients (HOG)
+![Image](/images_for_project_overview/raw_img_vs_hog_img.png)
+
+### Speeded-Up Robust Features (SURF)
+![Image](/images_for_project_overview/surf_examples.png)
+
 
 
 
