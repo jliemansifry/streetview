@@ -9,6 +9,7 @@ from keras.models import model_from_json
 from keras.layers.core import Dense, Dropout, Activation, Flatten
 from keras.layers.convolutional import Convolution2D, MaxPooling2D
 from coloradoGIS import plot_shapefile
+import matplotlib.pyplot as plt
 # from keras.optimizers import SGD
 
 def load_data(category_name):
@@ -139,7 +140,7 @@ def test_equality_of_build_methods(model, modelN):
     print 'It is {} that the weights are the same'.format(all(
         merged_layer_weights[7] == N_weights[7]))
 
-def return_specified_proba(X, idx, model_name, categories, df, NESW_merged = None, show = False):
+def return_specified_proba(X, idx, model_name, categories, df, NESW_merged = None, show = False, save = False):
     ''' 
     INPUT:  (1) 4D numpy array: All X data
             (2) integer: index to determine probabilities for
@@ -148,6 +149,7 @@ def return_specified_proba(X, idx, model_name, categories, df, NESW_merged = Non
             (5) df: to determine the true county
             (6) optional previously loaded model 
             (7) boolean: show the probabilities on a map?
+            (8) boolean: save the image?
     OUTPUT: (1) dict: categories and their associated probabilities
 
     Return the probabilities associated with each category that the model
@@ -156,6 +158,7 @@ def return_specified_proba(X, idx, model_name, categories, df, NESW_merged = Non
     not need to be reloaded in the future.
     '''
     model_built = False
+    f = 'shapefiles/Shape/GU_CountyOrEquivalent'
     if NESW_merged is None:
         model_built = True
         NESW_merged = build_merged_model(model_name)
@@ -165,12 +168,13 @@ def return_specified_proba(X, idx, model_name, categories, df, NESW_merged = Non
     final_probas = NESW_merged.predict_proba([X[N_idx:end_idx:4], X[E_idx:end_idx:4], X[S_idx:end_idx:4], X[W_idx:end_idx:4]], batch_size = 1)[0]
     probas_dict = {c: p for c, p in zip(categories, final_probas)}
     if show:
-        f = 'shapefiles/Shape/GU_CountyOrEquivalent'
-        plot_shapefile(f, options = 'counties', more_options = 'by_probability', cm = 'continuous', df = df, probas_dict = probas_dict, true_idx = idx)
-    else:
-        if model_built:
-            return probas_dict, NESW_merged
-        return probas_dict
+        print 'showing'
+        plot_shapefile(f, options = 'counties', more_options = 'by_probability', cm = 'continuous', df = df, probas_dict = probas_dict, true_idx = idx, show = True, save = False)
+    if save:
+        print 'ssaving'
+        plot_shapefile(f, options = 'counties', more_options = 'by_probability', cm = 'continuous', df = df, probas_dict = probas_dict, true_idx = idx, show = False, save = True)
+    if model_built:
+        return probas_dict, NESW_merged
 
 if __name__ == '__main__':
     df, X, y, categories = load_data('county')
