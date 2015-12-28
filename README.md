@@ -36,14 +36,11 @@ Pixels from the image on the left (circles) and on the right (diamonds) are plot
 
 Taking the images with the smallest euclidean distance between their color histogram vectors gives exciting results for determining where in Colorado a series of North, East, South, and West images was taken, as seen below. In each case, the first set are the 'search' images and the second set are the most similar set of images found in my database. Often, the result is a set of images taken on the same google street view drive, as can be seen in the third image, which displays a map of the true location, guessed location based on most similar set of images, and the nearest 9 after that. 
 
-![Image](/images_for_project_overview/pano_likeness_df_idx_5155.png) 
-![Image](/images_for_project_overview/pano_likeness_df_idx_5152.png)
----------------------
-![Image](/images_for_project_overview/pano_likeness_df_idx_3647.png) 
-![Image](/images_for_project_overview/pano_likeness_df_idx_221.png)
----------------------
-![Image](/images_for_project_overview/pano_likeness_df_idx_3070.png) 
-![Image](/images_for_project_overview/pano_likeness_df_idx_2536.png)
+![Image](/images_for_project_overview/pano_likeness_mountains.png)
+![Image](/images_for_project_overview/pano_likeness_highway.png) 
+![Image](/images_for_project_overview/pano_likeness_grasslands.png) 
+![Image](/images_for_project_overview/pano_likeness_all_3.png) 
+
 
 
 
