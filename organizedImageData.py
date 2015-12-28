@@ -16,15 +16,17 @@ from matplotlib import animation
 from imageScraper import save_image, get_date
 from coloradoGIS import load_geologic_history, load_features_and_shape, find_which_feature
 from imageAnalysisFunctions import corner_frac, surf, cv2_image, sklearn_hog
+from IPython.display import HTML
+
 # cd = ColorDescriptor((8, 12, 3))
 
 def read_data():
     # df = pd.read_csv('big_list_with_filenames.csv')
     # df = pd.read_csv('big_list_with_road_colorhists.csv')
-    # df = pd.read_pickle('big_list_with_nearest_10.pkl')
+    df = pd.read_pickle('big_list_with_nearest_10.pkl')
     # df_with_new = pd.read_csv('big_list_o_trimmed_coord.csv')
     # df_with_new = df_with_new.drop_duplicates()
-    df = pd.read_pickle('big_list_with_only_4_rock_classes_thru_14620.pkl')
+    # df = pd.read_pickle('big_list_with_only_4_rock_classes_thru_14620.pkl')
     # df = pd.read_pickle('big_list_reindex_with_classes.pkl')
 
     return df#, df_with_new
@@ -60,10 +62,10 @@ def write_mountains_cities_plains(df):
     #df['plains'] = df.index.isin(plains)
     print len(cities) + len(plains) + len(mountains)
 
-def plot_3d(df, style = 'scatter', show = True, options = 'normal'):
+def plot_3d(df, style = 'scatter', show = True, options = 'normal', animate = False):
     ''' Plot all the locations in lat/lng/elev space. 
     Just for fun to see all of the downloaded locations. '''
-    fig = plt.figure()
+    fig = plt.figure(figsize = (8, 8))
     #ax = fig.add_subplot(111, projection='3d')
     ax = Axes3D(fig)
     ax.set_xlabel('lat') 
@@ -105,8 +107,10 @@ def plot_3d(df, style = 'scatter', show = True, options = 'normal'):
         ax.view_init(elev = 45., azim = i)
     anim = animation.FuncAnimation(fig, animate, init_func=show,
                                    frames=1080, interval=20, blit=False)
-    anim.save('data_animation_rotation_dpi200_45deg_newlabels2.mp4', fps=30, extra_args=['-vcodec', 'libx264'], dpi = 200)
-    # t = animation.Animation.to_html5_video(anim); return t; if you wanted to embed
+    anim.save('data_animation_rotation_dpi200_45deg_newlabels5.mp4', fps=30, extra_args=['-vcodec', 'libx264'], dpi = 200)
+    #html5_anim = animation.Animation.to_html5_video(anim) #; return t; if you wanted to embed
+    # return html5_anim
+    # HTML(html5_anim)
     # this video as an html5 video
     #return t
 
@@ -143,6 +147,30 @@ def show_me(df, idx, classes = None, probas = None):
         print probas[idx*4:idx*4+4]
     ax.set_xticks([]); ax.set_yticks([]); ax2.set_xticks([]); ax2.set_yticks([])
     ax3.set_xticks([]); ax3.set_yticks([]); ax4.set_xticks([]); ax4.set_yticks([])
+    plt.show()
+
+def show_me_pano(df, idx, classes = None, probas = None, save = False):
+    NESW = ['N','E','S','W']
+    filenames = [df['base_filename'][idx] + cardinal_dir + '.png' for cardinal_dir in NESW]
+    fig = plt.figure(figsize = (16, 3))
+    # ax = fig.add_subplot(111, axisbg='w', frame_on=False)
+    def add_ax(filename, xloc, label):
+        ax = fig.add_axes([xloc, .05, 1*1.31, .625*1.31])
+        ax.set_xticks([]); ax.set_yticks([])
+        ax.imshow(imread(filename))
+        ax.set_title(label)
+    labels = ['North', 'East', 'South', 'West']
+    xlocs = np.linspace(-.530, .22, 4)
+    for filename, xloc, label in zip(filenames, xlocs, labels):
+        add_ax(filename, xloc, label)
+    #print "The county is: {}".format(df['county'][idx])
+    print "The true elevation is {}".format(df['elev'][idx])
+    #print "The age of the rock is in the range of {} million years".format(df['rock_age'][idx])
+    if classes is not None and probas is not None:
+        print classes[idx*4:idx*4+4]
+        print probas[idx*4:idx*4+4]
+    if save:
+        plt.savefig('images_for_project_overview/pano_' + str(idx) + '.png', dpi = 150)
     plt.show()
 
 def find_locations_nearest_10(source_idx, direction):
@@ -205,10 +233,8 @@ def play_color_likeness(df):
         ax.imshow(cv2_image(filename))
         ax2 = fig.add_subplot(2,2,2)
         ax2.imshow(cv2_image(nearest_image))
-        ax.set_xticks([])
-        ax.set_yticks([])
-        ax2.set_xticks([])
-        ax2.set_yticks([])
+        ax.set_xticks([]); ax.set_yticks([])
+        ax2.set_xticks([]); ax2.set_yticks([])
         ax3 = fig.add_subplot(2,2,3)
         nearest_10 = find_locations_nearest_10(source_idx, direction)
         true_loc = df['lat'][source_idx], df['lng'][source_idx]
@@ -228,6 +254,44 @@ def play_color_likeness(df):
         ax4.set_xlim(-109.5, -102.5)
         ax4.set_ylim(37, 41)
         plt.show()
+
+def plot_nearest_10(idx, direction, save = False):
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    true_loc = df['lat'][idx], df['lng'][idx]
+    nearest_10 = find_locations_nearest_10(idx, direction)
+    ax.scatter(true_loc[1], true_loc[0], color = '#00FF00', label = 'True Location', s = 120, zorder = 3, marker = '*', alpha = .7)
+    ax.scatter(nearest_10[0][1], nearest_10[0][0], color = '#088A29', label = 'Best Guess', s = 50, zorder = 2, alpha = .7)
+    ax.scatter(nearest_10[1:, 1], nearest_10[1:, 0], label = 'Rest of Top 10', zorder = 1, alpha = .7)
+    ax.set_xlim(-109.5, -102.5)
+    ax.set_ylim(37, 41)
+    ax.set_xlabel("Longitude")
+    ax.set_ylabel("Latitude")
+    # ax2 = fig.add_axes([0.14, 0.55, .35, .34])
+    ax2 = fig.add_axes([0.54, 0.11, .35, .34])
+    def check_in_region(true_loc, test_loc_array, spread):
+        return (test_loc_array < true_loc + spread) & (test_loc_array > true_loc - spread)
+    spread = .1
+    idx_for_inset = np.where(check_in_region(true_loc[0], nearest_10[:,0], spread) & check_in_region(true_loc[1], nearest_10[:,1], spread))[0]
+    ax2.scatter(true_loc[1], true_loc[0], color = '#00FF00', s = 120, zorder = 3, marker = '*', alpha = .7)
+    ax2.scatter(nearest_10[0][1], nearest_10[0][0], color = '#088A29', s = 50, zorder = 2, alpha = .7)
+    ax2.scatter(nearest_10[:, 1][idx_for_inset][1:], nearest_10[:, 0][idx_for_inset][1:], alpha = 0.7)
+    # ax2.yaxis.tick_right()
+    ax2.xaxis.tick_top()
+    ax2.set_xlim(round(true_loc[1], 1) - spread, round(true_loc[1]) + spread)
+    ax2.set_ylim(round(true_loc[0], 1) - spread, round(true_loc[0]) + spread)
+    x_ticks = (np.linspace(round(true_loc[1], 1) - spread, round(true_loc[1], 1) + spread, 5))
+    y_ticks = (np.linspace(round(true_loc[0], 1) - spread, round(true_loc[0], 1) + spread, 5))
+    ax2.set_xticks(x_ticks)
+    ax2.set_yticks(y_ticks)
+    ax2.set_xticklabels([''] + [str(x) for x in x_ticks[1:-1]] + [''])
+    # ax2.get_xaxis().get_major_formatter().set_useOffset(False)
+    ax2.set_xlim(round(true_loc[1], 2) - spread, true_loc[1] + spread)
+    ax2.set_ylim(round(true_loc[0], 2) - spread, true_loc[0] + spread)
+    ax.legend(bbox_to_anchor=(0., 1.01, 1., .102), loc=3, ncol=3, mode="expand", borderaxespad=0.)
+    if save:
+        plt.savefig('pano_likeness_' + str(idx) + '.png', dpi = 200)
+    plt.show()
 
 def write_dates(df):
     ''' Filled in missing dates after downloading images before 
