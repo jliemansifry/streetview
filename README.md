@@ -34,7 +34,7 @@ Pixels from the image on the left (circles) and on the right (diamonds) are plot
 
 ![Image](/images_for_project_overview/HSV_image_comparison.gif)
 
-Taking the images with the smallest euclidean distance between their color histogram vectors gives exciting results for determining where in Colorado a series of North, East, South, and West images was taken, as seen below. In each case, the first set are the 'search' images and the second set are the most similar set of images found in my database. Often, the result is a set of images taken on the same google street view drive, as can be seen in the third image, which displays a map of the true location, guessed location based on most similar set of images, and the nearest 9 after that. 
+Taking the images with the smallest euclidean distance between their color histogram vectors gives exciting results for determining where in Colorado a series of North, East, South, and West images was taken, as seen below. In each case presented, the first panorama acts as the 'search' set of images, and the second set are the most similar set of images found in the database. Often, the most similar set of images is remarkably close in location to the search images, as can be seen in the figure that follows the panoramas. This figure displays the true location of the 'search' panorama, the best guess based on most similar image in the database, and the rest of the nearest 10 locations.
 
 ![Image](/images_for_project_overview/pano_likeness_mountains.png)
 ![Image](/images_for_project_overview/pano_likeness_highway.png) 
@@ -42,10 +42,24 @@ Taking the images with the smallest euclidean distance between their color histo
 ![Image](/images_for_project_overview/pano_likeness_all_3.png) 
 
 ### Histograms of Oriented Gradients (HOG)
+We can get a sense of the texture and simple features that make up an image by using an implementation of HOG, which calcuates the intensity gradient across a specified pixel region. The strength and orientation of these gradients can then be compared between images to quantify their similarity. Below is an example of HOG in action. 
 ![Image](/images_for_project_overview/raw_img_vs_hog_img_rotate.png)
 
 ### Speeded-Up Robust Features (SURF)
+SURF also uses ascertains features in images by looking at intensity gradients. However, rather than looking at the entire image, the algorithm looks for regions of the highest intensity gradients, their scale, and their orientation. These regions are marked and vectorized as features, which can then be compared between images. In the examples below, each circle denotes a feature, with the line from the center denoting its orientation.
 ![Image](/images_for_project_overview/surf_examples.png)
+
+### Pros and Cons of Vector Based Methods
+Vector based methods can work remarkably well at matching images within a dataset. However, there are a series of stipulations to fulfill this *can*. There are enough images in this dataset that it is not uncommon for there to be pairs (or more) of images taken with the same google street view car on the same road during the same season at the same time of day. That's a lot of sames. Without these conditions, this technique simply wouldn't work. Change any one of these things and the similarity of the images, as determined by the computer, would plummet. 
+
+Additionally, vector based methods are not translationally invariant at their core. If two otherwise quite similar images were shifted from one another, the computer would no longer see them as being so similar. While possible to account for transformations of various kinds (rotation, translation, reflection, scaling, etc.) when comparing images, this would drive the computational requirements through the roof for a dataset of this size. It simply isn't practical when you need to compare your 'search' image to thousands of other images. 
+
+## Convolutional Neural Networks 
+Coming soon!
+
+![Image](/images_for_project_overview/county_model_v1.0_Denver_idx_5290.png)
+![Image](/images_for_project_overview/county_model_v1.0_Weld_idx_286)
+![Image](/images_for_project_overview/county_model_v1.0_Summit_idx_2072)
 
 
 
