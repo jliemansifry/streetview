@@ -46,7 +46,7 @@ We can get a sense of the texture and simple features that make up an image by u
 ![Image](/images_for_project_overview/raw_img_vs_hog_img_rotate.png)
 
 ### Speeded-Up Robust Features (SURF)
-SURF also uses ascertains features in images by looking at intensity gradients. However, rather than looking at the entire image, the algorithm looks for regions of the highest intensity gradients, their scale, and their orientation. These regions are marked and vectorized as features, which can then be compared between images. In the examples below, each circle denotes a feature, with the line from the center denoting its orientation.
+SURF also ascertains features in images by looking at intensity gradients. However, rather than looking at the entire image, the algorithm looks for regions of the highest intensity gradients, their scale, and their orientation. These regions are marked and vectorized as features, which can then be compared between images. In the examples below, each circle denotes a feature, with the line from the center denoting its orientation.
 ![Image](/images_for_project_overview/surf_examples.png)
 
 ### Pros and Cons of Vector Based Methods
@@ -55,11 +55,12 @@ Vector based methods can work remarkably well at matching images within a datase
 Additionally, vector based methods are not translationally invariant at their core. If two otherwise quite similar images were shifted from one another, the computer would no longer see them as being so similar. While possible to account for transformations of various kinds (rotation, translation, reflection, scaling, etc.) when comparing images, this would drive the computational requirements through the roof for a dataset of this size. It simply isn't practical when you need to compare your 'search' image to thousands of other images. 
 
 ## Convolutional Neural Networks 
-Coming soon!
+Description coming soon!
 
+A teaser is below of how well my CNN is doing. The images on the left act as the 'search' images and come from the shaded county. The colors correspond to the predicted probabilities (according to the CNN) of the images coming from each of the other counties in Colorado.
 ![Image](/images_for_project_overview/county_model_v1.0_Denver_idx_5290.png)
-![Image](/images_for_project_overview/county_model_v1.0_Weld_idx_286)
-![Image](/images_for_project_overview/county_model_v1.0_Summit_idx_2072)
+![Image](/images_for_project_overview/county_model_v1.0_Weld_idx_286.png)
+![Image](/images_for_project_overview/county_model_v1.0_Summit_idx_2072.png)
 
 
 
