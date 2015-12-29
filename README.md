@@ -11,8 +11,6 @@ Below are a handful of examples of what the streetview images look like for a gi
 
 ![Image](/images_for_project_overview/pano_df_idx_5.png)
 ![Image](/images_for_project_overview/pano_df_idx_25.png)
-![Image](/images_for_project_overview/pano_df_idx_150.png)
-![Image](/images_for_project_overview/pano_df_idx_250.png)
 ![Image](/images_for_project_overview/pano_df_idx_340.png)
 ![Image](/images_for_project_overview/pano_df_idx_3100.png)
 
