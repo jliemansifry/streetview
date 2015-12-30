@@ -1,11 +1,12 @@
 # Google Street View Locaiton Predictor
 The emerging field of feature recognition in images is revolutionizing how well computers are able to understand the world around us. Inspired by [geoguessr](https://geoguessr.com/usa/play), my project uses Convolutional Neural Networks (CNN) to discern relevant features that correspond to geographic locations in Colorado. This type of modeling has applications for self-driving cars, where maintaining a keen sense of environment is vitally important. Distinguishing canyon roads from local streets and a clear day from a rainy one will be integral in making smarter autonomous vehicles.
 
-| Section | Topic |
-| --- | --- |
-| 1 |  [The Data](#the-data) |
-| 2 |  [Determining Image Likeness With Vector Based Methods](#determining image likeness with vector based methods) |
-| 3 |  [Convolutional Neural Networks](#convolutional-nerual-networks) |
+| Section | Subsection | Topic |
+| --- | --- | --- |
+| 1 | 1 | [The Data](#the-data) |
+| 2 | 1 | [Determining Image Likeness With Vector Based Methods](#determining-image-likeness-with-vector-based-methods) |
+| 2 | 2 | [HSV Color Histograms](#HSV-Color-Histograms) |
+| 3 | 1 | [Convolutional Neural Networks](#convolutional-nerual-networks) |
 
 
 ## The Data
