@@ -57,6 +57,17 @@ def load_data(category_name):
     X /= 255.
     return df, X, all_y_data, categories
 
+def load_iPhone_images():
+    X = np.zeros((12, 50, 80, 3))
+    img_nums = range(5908, 5910) + range(5911, 5921)
+    img_names = ['/Users/jliemansifry/Desktop/outside_galvanize_test/IMG_' + str(num) + '.jpg' for num in img_nums]
+    for idx, img_name in enumerate(img_names):
+        X[idx] = imread(img_name)
+    X = X.reshape(X.shape[0], 3, 50, 80)
+    X = X.astype('float32')
+    X /= 255.
+    return X
+
 def load_models(model_name):
     ''' 
     INPUT:  (1) string: the full path to the model weights and architecture
@@ -140,7 +151,7 @@ def test_equality_of_build_methods(model, modelN):
     print 'It is {} that the weights are the same'.format(all(
         merged_layer_weights[7] == N_weights[7]))
 
-def return_specified_proba(X, idx, model_name, categories, df, NESW_merged = None, show = False, save = False, two_sets_of_NESW = False):
+def return_specified_proba(X, idx, model_name, categories, df, NESW_merged = None, local = False, show = False, save = False, two_sets_of_NESW = False):
     ''' 
     INPUT:  (1) 4D numpy array: All X data
             (2) integer: index to determine probabilities for
@@ -148,9 +159,10 @@ def return_specified_proba(X, idx, model_name, categories, df, NESW_merged = Non
             (4) list: all categories
             (5) df: to determine the true county
             (6) optional previously loaded model 
-            (7) boolean: show the probabilities on a map?
-            (8) boolean: save the image?
-            (9) boolean: two sets of NESW models as input?
+            (7) boolean: using local images or not?
+            (8) boolean: show the probabilities on a map?
+            (9) boolean: save the image?
+            (10) boolean: two sets of NESW models as input?
     OUTPUT: (1) dict: categories and their associated probabilities
 
     Return the probabilities associated with each category that the model
@@ -173,10 +185,10 @@ def return_specified_proba(X, idx, model_name, categories, df, NESW_merged = Non
     probas_dict = {c: p for c, p in zip(categories, final_probas)}
     if show:
         print 'showing'
-        plot_shapefile(f, options = 'counties', more_options = 'by_probability', cm = 'continuous', df = df, probas_dict = probas_dict, true_idx = idx, show = True, save = False)
+        plot_shapefile(f, options = 'counties', more_options = 'by_probability', cm = 'continuous', df = df, probas_dict = probas_dict, local = local, true_idx = idx, show = True, save = False)
     if save:
-        print 'ssaving'
-        plot_shapefile(f, options = 'counties', more_options = 'by_probability', cm = 'continuous', df = df, probas_dict = probas_dict, true_idx = idx, show = False, save = True)
+        print 'saving'
+        plot_shapefile(f, options = 'counties', more_options = 'by_probability', cm = 'continuous', df = df, probas_dict = probas_dict, local = local, true_idx = idx, show = False, save = True)
     if model_built:
         return probas_dict, NESW_merged
 
