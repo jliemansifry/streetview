@@ -65,6 +65,8 @@ Additionally, vector based methods are not translationally invariant at their co
 ## Convolutional Neural Networks 
 Description coming soon!
 
+![Image](/images_for_project_overview/model_architecture.png)
+
 A teaser is below of how well my CNN is doing. The images on the left act as the 'search' images and come from the shaded county. The colors correspond to the predicted probabilities (according to the CNN) of the images coming from each of the other counties in Colorado.
 ![Image](/images_for_project_overview/county_model_v1.0_Denver_idx_5290.png)
 ![Image](/images_for_project_overview/county_model_v1.0_Weld_idx_286.png)
