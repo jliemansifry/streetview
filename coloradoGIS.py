@@ -16,7 +16,7 @@ from imagePresentationFunctions import make_cmyk_greyscale_continuous_cmap
 import random
 import shapely.geometry as sg
 
-def plot_shapefile(f, options = 'counties', more_options = None, cm = 'blues', df = None, probas_dict = None, true_idx = None, show = False, save = False):
+def plot_shapefile(f, options = 'counties', more_options = None, cm = 'blues', df = None, probas_dict = None, local = False, true_idx = None, show = False, save = False):
     ''' 
     INPUT:  (1) string: shapefile to use
             (2) string: options to specify that build a nice plot
@@ -95,11 +95,16 @@ def plot_shapefile(f, options = 'counties', more_options = None, cm = 'blues', d
                 proba_idx = int(proba / max_proba * 100)
                 pc.set_color(discrete_colormap[proba_idx])
                 pc.set_edgecolor('k')
-                if county_name == df['county'][true_idx]:
+                if local:
+                    if county_name == 'Denver':
+                        pc.set_hatch('\\')
+                        pc.set_edgecolor('k')
+                if county_name == df['county'][true_idx] and not local:
                     pc.set_hatch('//')
                     pc.set_edgecolor('w')
                     pc.set_hatch('\\')
                     pc.set_edgecolor('k')
+                
             else:
                 pc.set_color(random.choice(discrete_colormap))
         elif options == 'rocktypes':
@@ -132,8 +137,12 @@ def plot_shapefile(f, options = 'counties', more_options = None, cm = 'blues', d
         ax.add_collection(pc)
             
     NESW = ['N', 'E', 'S', 'W']
-    filenames = [df['base_filename'][true_idx] + cardinal_dir + '.png' 
-                 for cardinal_dir in NESW]
+    if local:
+        filenums = [5919, 5918, 5917, 5920]
+        filenames = ['/Users/jliemansifry/Desktop/outside_galvanize_test/IMG_' + str(num) + ' (1).jpg' for num in filenums]
+    else:
+        filenames = [df['base_filename'][true_idx] + cardinal_dir + '.png' 
+                    for cardinal_dir in NESW]
     if more_options == 'by_probability':
         def add_image(filename, y, label):
             ax_to_add = fig.add_axes([0., y, .32, .20])
@@ -148,7 +157,10 @@ def plot_shapefile(f, options = 'counties', more_options = None, cm = 'blues', d
     # lt, lg = m(-105.5, 39) # test overplot a point
     # m.plot(lt, lg, 'bo', markersize = 24)
     if save:
-        plt.savefig('model_testing/county_model_v1.0_' + str(df['county'][true_idx]) + '_idx_' + str(true_idx) + '.png', dpi = 150)
+        if local:
+            plt.savefig('model_testing/county_model_v1.1_' + 'Denver.png', dpi = 150)
+        else:
+            plt.savefig('model_testing/county_model_v1.1_' + str(df['county'][true_idx]) + '_idx_' + str(true_idx) + '.png', dpi = 150)
     if show:
         plt.show()
 
