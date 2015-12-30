@@ -5,9 +5,9 @@ The emerging field of feature recognition in images is revolutionizing how well 
 1. [The Data](#the-data)
 2. [Determining Image Likeness With Vector Based Methods](#determining-image-likeness-with-vector-based-methods)
   * [HSV Color Histograms](#hsv-color-histograms)
-  * [Histograms of Oriented Gradients (HOG)](histograms-of-oriented-gradients)
-  * [Speeded-Up Robust Features (SURF)](speeded-up-robust-features)
-  * [Pros and Cons of Vector Based Methods](pros-and-cons-of-vector-based-methods)
+  * [Histograms of Oriented Gradients (HOG)](#histograms-of-oriented-gradients)
+  * [Speeded-Up Robust Features (SURF)](#speeded-up-robust-features)
+  * [Pros and Cons of Vector Based Methods](#pros-and-cons-of-vector-based-methods)
 3. [Convolutional Neural Networks](#convolutional-neural-networks)
 
 
