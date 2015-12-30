@@ -5,9 +5,9 @@ The emerging field of feature recognition in images is revolutionizing how well 
 1. [The Data](#the-data)
 2. [Determining Image Likeness With Vector Based Methods](#determining-image-likeness-with-vector-based-methods)
   * [HSV Color Histograms](#hsv-color-histograms)
-  * [Histograms of Oriented Gradients](histograms-of-oriented-gradients)
-  * [Speeded up](speeded-up-robust-features)
-  * [test](pros-and-cons-of-vector-based-methods)
+  * [Histograms of Oriented Gradients (HOG)](histograms-of-oriented-gradients)
+  * [Speeded-Up Robust Features (SURF)](speeded-up-robust-features)
+  * [Pros and Cons of Vector Based Methods](pros-and-cons-of-vector-based-methods)
 3. [Convolutional Neural Networks](#convolutional-neural-networks)
 
 
@@ -53,7 +53,7 @@ Taking the images with the smallest euclidean distance between their color histo
 We can get a sense of the texture and simple features that make up an image by using an implementation of HOG, which calcuates the intensity gradient across a specified pixel region. The strength and orientation of these gradients can then be compared between images to quantify their similarity. Below is an example of HOG in action. 
 ![Image](/images_for_project_overview/raw_img_vs_hog_img_rotate.png)
 
-### Speeded-Up Robust Features
+### Speeded Up Robust Features
 SURF also ascertains features in images by looking at intensity gradients. However, rather than looking at the entire image, the algorithm looks for regions of the highest intensity gradients, their scale, and their orientation. These regions are marked and vectorized as features, which can then be compared between images. In the examples below, each circle denotes a feature, with the line from the center denoting its orientation.
 ![Image](/images_for_project_overview/surf_examples.png)
 
