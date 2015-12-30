@@ -2,13 +2,13 @@
 The emerging field of feature recognition in images is revolutionizing how well computers are able to understand the world around us. Inspired by [geoguessr](https://geoguessr.com/usa/play), my project uses Convolutional Neural Networks (CNN) to discern relevant features that correspond to geographic locations in Colorado. This type of modeling has applications for self-driving cars, where maintaining a keen sense of environment is vitally important. Distinguishing canyon roads from local streets and a clear day from a rainy one will be integral in making smarter autonomous vehicles.
 
 ## Table of Contents
-* [The Data](#the-data)
-* [Determining Image Likeness With Vector Based Methods](#determining-image-likeness-with-vector-based-methods)
-  *[HSV Color Histograms](#hsv-color-histograms)
-  *[test](histograms-of-oriented-gradients-(hog))
-  *[test](speeded-up-robust-features-(surf))
-  *[test](pros-and-cons-of-vector-based-methods)
-*[Convolutional Neural Networks](#convolutional-neural-networks)
+  * [The Data](#the-data)
+  * [Determining Image Likeness With Vector Based Methods](#determining-image-likeness-with-vector-based-methods)
+    *[HSV Color Histograms](#hsv-color-histograms)
+    *[Histograms of Oriented Gradients](histograms-of-oriented-gradients)
+    *[Speeded up](speeded-up-robust-features)
+    *[test](pros-and-cons-of-vector-based-methods)
+  *[Convolutional Neural Networks](#convolutional-neural-networks)
 
 
 ## The Data
@@ -49,11 +49,11 @@ Taking the images with the smallest euclidean distance between their color histo
 ![Image](/images_for_project_overview/pano_likeness_grasslands.png) 
 ![Image](/images_for_project_overview/pano_likeness_all_3.png) 
 
-### Histograms of Oriented Gradients (HOG)
+### Histograms of Oriented Gradients
 We can get a sense of the texture and simple features that make up an image by using an implementation of HOG, which calcuates the intensity gradient across a specified pixel region. The strength and orientation of these gradients can then be compared between images to quantify their similarity. Below is an example of HOG in action. 
 ![Image](/images_for_project_overview/raw_img_vs_hog_img_rotate.png)
 
-### Speeded-Up Robust Features (SURF)
+### Speeded-Up Robust Features
 SURF also ascertains features in images by looking at intensity gradients. However, rather than looking at the entire image, the algorithm looks for regions of the highest intensity gradients, their scale, and their orientation. These regions are marked and vectorized as features, which can then be compared between images. In the examples below, each circle denotes a feature, with the line from the center denoting its orientation.
 ![Image](/images_for_project_overview/surf_examples.png)
 
