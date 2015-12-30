@@ -140,7 +140,7 @@ def test_equality_of_build_methods(model, modelN):
     print 'It is {} that the weights are the same'.format(all(
         merged_layer_weights[7] == N_weights[7]))
 
-def return_specified_proba(X, idx, model_name, categories, df, NESW_merged = None, show = False, save = False):
+def return_specified_proba(X, idx, model_name, categories, df, NESW_merged = None, show = False, save = False, two_sets_of_NESW = False):
     ''' 
     INPUT:  (1) 4D numpy array: All X data
             (2) integer: index to determine probabilities for
@@ -150,6 +150,7 @@ def return_specified_proba(X, idx, model_name, categories, df, NESW_merged = Non
             (6) optional previously loaded model 
             (7) boolean: show the probabilities on a map?
             (8) boolean: save the image?
+            (9) boolean: two sets of NESW models as input?
     OUTPUT: (1) dict: categories and their associated probabilities
 
     Return the probabilities associated with each category that the model
@@ -165,7 +166,10 @@ def return_specified_proba(X, idx, model_name, categories, df, NESW_merged = Non
     N_idx = idx * 4; E_idx = idx * 4 + 1
     S_idx = idx * 4 + 2; W_idx = idx * 4 + 3
     end_idx = idx * 4 + 4
-    final_probas = NESW_merged.predict_proba([X[N_idx:end_idx:4], X[E_idx:end_idx:4], X[S_idx:end_idx:4], X[W_idx:end_idx:4]], batch_size = 1)[0]
+    if two_sets_of_NESW:
+        final_probas = NESW_merged.predict_proba([X[N_idx:end_idx:4], X[E_idx:end_idx:4], X[S_idx:end_idx:4], X[W_idx:end_idx:4], X[N_idx:end_idx:4], X[E_idx:end_idx:4], X[S_idx:end_idx:4], X[W_idx:end_idx:4]], batch_size = 1)[0]
+    else:
+        final_probas = NESW_merged.predict_proba([X[N_idx:end_idx:4], X[E_idx:end_idx:4], X[S_idx:end_idx:4], X[W_idx:end_idx:4]], batch_size = 1)[0]
     probas_dict = {c: p for c, p in zip(categories, final_probas)}
     if show:
         print 'showing'
@@ -176,9 +180,33 @@ def return_specified_proba(X, idx, model_name, categories, df, NESW_merged = Non
     if model_built:
         return probas_dict, NESW_merged
 
+def calc_top_n_acc(X, y, NESW_merged, n, idx, end_idx, two_sets_of_NESW = True):
+    ''' 
+    INPUT:  (1) 4D numpy array: all X data
+            (2) 1D numpy array: all y data
+            (3) Keras model object
+            (4) integer to calculate top_n_class accuracy up to
+            (5) integer: start idx
+            (6) integer: end idx
+            (7) boolean: two sets of NESW models as input?
+    OUTPUT: (1) float: the top n probability
+    '''
+    N_idx = idx * 4; E_idx = idx * 4 + 1
+    S_idx = idx * 4 + 2; W_idx = idx * 4 + 3
+    end_idx = end_idx * 4
+    if two_sets_of_NESW:
+        probas = NESW_merged.predict_proba([X[N_idx:end_idx:4], X[E_idx:end_idx:4], X[S_idx:end_idx:4], X[W_idx:end_idx:4], X[N_idx:end_idx:4], X[E_idx:end_idx:4], X[S_idx:end_idx:4], X[W_idx:end_idx:4]], batch_size = 32)
+    else:
+        probas = NESW_merged.predict_proba([X[N_idx:end_idx:4], X[E_idx:end_idx:4], X[S_idx:end_idx:4], X[W_idx:end_idx:4]], batch_size = 32)
+    y_true = y[N_idx:end_idx:4]
+    top_n_classes = np.fliplr(np.argsort(probas, axis = 1))[:, :n]
+    in_top_n = [1 if y_true[row_idx] in row else 0 for row_idx, row in enumerate(top_n_classes)]
+    return np.sum(in_top_n) / float(len(y_true))
+
 if __name__ == '__main__':
     df, X, y, categories = load_data('county')
-    model_name = 'models/county/_NESW_dense256_relu_drop05_dense3_/county_64_batch_16_epoch_14621_NESW_dense256_relu_drop05_dense3_'
+    # model_name = 'models/county/_NESW_dense256_relu_drop05_dense3_/county_64_batch_16_epoch_14621_NESW_dense256_relu_drop05_dense3_'
+    model_name = 'models/county/_NESW_doubleconv_3and5_firstlayer_128_premerge_1024_dense_after_merge_/county_32_batch_16_epoch_14621_NESW_doubleconv_3and5_firstlayer_128_premerge_1024_dense_after_merge_'
     # modelN, modelE, modelS, modelW = load_models(model_name)
     #X_merged = get_merged_activations(modelN, modelE, modelS, modelW, X)
     #NESW = build_merged_model_as_standalone(X_merged, model_name, categories)
