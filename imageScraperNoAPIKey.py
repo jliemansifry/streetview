@@ -4,23 +4,24 @@ import csv
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 import googlemaps
-import random
 import urllib
 
 gmaps_API = googlemaps.Client(key='*********')
 geocoder_API = '*******'
 streetview_API_key = '********'
 
-CO_NW = (41.0,-109.05)
-CO_SW = (37.0,-109.05)
-CO_SE = (37.0,-102.05)
-CO_NE = (41.0,-102.05)
-def gen_random_coord(NW, SW, SE, NE): #will work for square states but not all
-    coord = (random.uniform(NW[0],SW[0]),random.uniform(NW[1],NE[1]))
-    return coord
-
-def save_image(coord, heading, pitch = 5, fov = 90):
-    ''' heading of 0,360 = N, 90= E, 180 = S, 270 = W '''
+def save_image(coord, heading, pitch = 5, fov = 90, loc = 'data'):
+    '''
+    INPUT:  (1) tuple: latitude and longitude coordinates, in degrees
+            (2) integer: 0, 360 = N, 90= E, 180 = S, 270 = W 
+            (3) integer: -90 < pitch < 90 (degrees). 5 is a good middleground
+            (4) integer: 20 < fov < 120. 90 is a natural middleground.
+            (5) string: folder name to save images to
+    OUTPUT: None
+    
+    This function will save google street view images facing N, E, S, and W
+    for a given coordinate pair to 'loc'
+    '''
     if heading == 0 or heading == 360:
         sufx = 'N'
     elif heading == 90:
@@ -30,20 +31,35 @@ def save_image(coord, heading, pitch = 5, fov = 90):
     elif heading == 270:
         sufx = 'W'
     web_address = 'https://maps.googleapis.com/maps/api/streetview?size=640x400&location='+str(coord[0])+','+str(coord[1])+'&fov='+str(fov)+'&heading='+str(heading)+'&pitch='+str(pitch)+'&key='+streetview_API_key
-    filename = 'data/lat_'+str(coord[0])[:8]+',long_'+str(coord[1])[:8]+'_'+sufx+'.png'
+    filename = loc + '/lat_'+str(coord[0])[:8]+',long_'+str(coord[1])[:8]+'_'+sufx+'.png'
     urllib.urlretrieve(web_address, filename = filename)
 
-def reverse_geocode(coord): #returns city, state, full address
+def reverse_geocode(coord):
+    ''' 
+    INPUT:  (1) tuple: latitude and longitude coordinates, in degrees
+    OUTPUT: (1) string: full geocoded address
+    '''
     result = gmaps_API.reverse_geocode(coord)
     return result[0]['formatted_address']
 
 def get_elev(coord):
-    elev = gmaps_API.elevation((coord[0],coord[1]))[0]['elevation'] # needs a tuple
+    '''
+    INPUT:  (1) tuple: latitude and longitude coordinates, in degrees
+    OUTPUT: (1) float: elevation of the lat/lng point in meters
+    '''
+    elev = gmaps_API.elevation((coord[0],coord[1]))[0]['elevation']
     return elev
 
 # driver = webdriver.Firefox()
 
 def search_colorado():
+    ''' 
+    INPUT:  None
+    OUTPUT: None
+
+    Search 'Colorado, USA' on instantstreetview.com, a website that pulls up valid 
+    streetview coordinates.
+    '''
     driver.get('http://www.instantstreetview.com/')
     searcher = driver.find_element_by_id("search")
     searcher.click()
@@ -53,11 +69,21 @@ def search_colorado():
     time.sleep(0.5)
     
 def get_random_valid_gps():
+    ''' 
+    INPUT:  None
+    OUTPUT: string: the web address of a valid google street view location
+    '''
     random_button.click()
     time.sleep(1)
     return driver.current_url
 
 def go_to_and_zoom():
+    '''
+    INPUT:  None
+    OUTPUT: None
+
+    Zoom in on Colorado in the sub-map. 
+    '''
     time.sleep(.3)
     action = webdriver.common.action_chains.ActionChains(driver)
     action.move_to_element_with_offset(random_button,-382,209) #400 left, 200 down. from random button
@@ -67,6 +93,10 @@ def go_to_and_zoom():
     action.perform()
 
 def get_date(coords):
+    ''' 
+    INPUT:  None
+    OUTPUT: string: the date the image was taken
+    '''
     web_url = 'http://maps.google.com/maps?q=&layer=c&cbll='+str(coords[0])+','+str(coords[1])
     driver.get(web_url)
     time.sleep(5)
@@ -79,6 +109,15 @@ def get_date(coords):
     return date.text
 
 def main():
+    ''' 
+    INPUT:  None
+    OUTPUT: None
+
+    Do everything. Go to the website, search and zoom in on Colorado, and get
+    random valid coordinates for street view locations in Colorado. Reverse geocode
+    the valid coordinates to get the elevation and full address of the location. 
+    Get the date the image was taken. Save everything to a .csv. 
+    '''
     global random_button, driver
     driver = webdriver.Firefox()
     search_colorado()
