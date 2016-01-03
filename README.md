@@ -68,11 +68,13 @@ Description coming soon!
 ![Image](/images_for_project_overview/model_architecture.png)
 
 A teaser is below of how well my CNN is doing. The images on the left act as the 'search' images and come from the shaded county. The colors correspond to the predicted probabilities (according to the CNN) of the images coming from each of the other counties in Colorado.
-![Image](/images_for_project_overview/county_model_v1.0_Denver_idx_5290.png)
-![Image](/images_for_project_overview/county_model_v1.0_Weld_idx_286.png)
-![Image](/images_for_project_overview/county_model_v1.0_Summit_idx_2072.png)
 
+![Image](/images_for_project_overview/county_model_v1.2_Summit_idx_203.png)
+![Image](/images_for_project_overview/county_model_v1.2_Jefferson_idx_156.png)
+![Image](/images_for_project_overview/county_model_v1.2_Garfield_idx_202.png)
+![Image](/images_for_project_overview/county_model_v1.2_El Paso_idx_166.png)
 
+![Image](/images_for_project_overview/county_model_v1.2_Denver.png)
 
 
 
