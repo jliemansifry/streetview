@@ -1,5 +1,3 @@
-import pandas as pd
-import cv2
 from mpl_toolkits.basemap import Basemap
 from pyproj import Proj, transform
 import fiona
@@ -7,16 +5,17 @@ from fiona.crs import from_epsg
 import numpy as np
 import matplotlib.pyplot as plt
 import shapely
-import shapefile
 import matplotlib
-from matplotlib.patches import Polygon, PathPatch, Patch
-from matplotlib.collections import PatchCollection, LineCollection
+from matplotlib.patches import Polygon
+from matplotlib.collections import PatchCollection
 from scipy.misc import imread
 from imagePresentationFunctions import make_cmyk_greyscale_continuous_cmap
 import random
 import shapely.geometry as sg
 
-def plot_shapefile(f, options = 'counties', more_options = None, cm = 'blues', df = None, probas_dict = None, local = False, true_idx = None, show = False, save = False):
+def plot_shapefile(f, options = 'counties', more_options = None, cm = 'blues',
+                   df = None, probas_dict = None, local = False, 
+                   true_idx = None, show = False, save = False):
     ''' 
     INPUT:  (1) string: shapefile to use
             (2) string: options to specify that build a nice plot
@@ -38,8 +37,18 @@ def plot_shapefile(f, options = 'counties', more_options = None, cm = 'blues', d
                         'blues' or 'continuous'
                         'blues' is easy on the eyes for random assignment
                         'continuous' is good for probabilities
+            (5) Pandas DataFrame: referenced for plotting purposes with 
+                        some options
+            (6) dictionary: counties as keys, probabilities associated with
+                        that county being the true county according to the CNN
+                        as values
+            (7) boolean: local photos or not? used for lazy purposes when 
+                        showing iPhone photos
+            (8) integer: the index in the dataframe of the true county
+            (9) boolean: show the plot?
+            (10) boolean: save the plot?
+    OUPUT:  (1) The plotted shapefile, saved or to screen as specified
                         '''
-    plt.clf() # clean slate
     fig = plt.figure(figsize=(20,10))
     ax = fig.add_subplot(111, axisbg='w', frame_on=False)
     m = Basemap(width=800000,height=550000, resolution='l', projection='aea',
@@ -74,7 +83,9 @@ def plot_shapefile(f, options = 'counties', more_options = None, cm = 'blues', d
 
     ## LOOP THROUGH SHAPEFILES ##
     for info, shape in zip(m.state_info, m.state):
-        pc = patch_collection(shape)
+        patches = [Polygon(np.array(shape), True)]
+        pc = PatchCollection(patches, edgecolor='k', hatch = None, 
+                            linewidths=0.5, zorder=2)
 
         ## OPTIONS OF HOW TO PLOT THE SHAPEFILE##
         if options == 'counties':
@@ -97,14 +108,11 @@ def plot_shapefile(f, options = 'counties', more_options = None, cm = 'blues', d
                 pc.set_edgecolor('k')
                 if local:
                     if county_name == 'Denver':
-                        pc.set_hatch('\\')
-                        pc.set_edgecolor('k')
+                        pc.set_hatch('//')
+                        pc.set_edgecolor('w')
                 if county_name == df['county'][true_idx] and not local:
                     pc.set_hatch('//')
                     pc.set_edgecolor('w')
-                    pc.set_hatch('\\')
-                    pc.set_edgecolor('k')
-                
             else:
                 pc.set_color(random.choice(discrete_colormap))
         elif options == 'rocktypes':
@@ -128,7 +136,8 @@ def plot_shapefile(f, options = 'counties', more_options = None, cm = 'blues', d
         if more_options == 'by_probability':
             ax2 = fig.add_axes([0.78, 0.1, 0.03, 0.8])
             cb = matplotlib.colorbar.ColorbarBase(ax2, cmap = cmap, 
-                    ticks = proba_range, boundaries = proba_range, format = '%1i')
+                      ticks = proba_range, boundaries = proba_range, 
+                      format = '%1i')
             labels = [str(round(proba, 4)) 
                       if idx % 10 == 0 else ''
                       for idx, proba in enumerate(proba_range)]
@@ -139,7 +148,8 @@ def plot_shapefile(f, options = 'counties', more_options = None, cm = 'blues', d
     NESW = ['N', 'E', 'S', 'W']
     if local:
         filenums = [5919, 5918, 5917, 5920]
-        filenames = ['/Users/jliemansifry/Desktop/outside_galvanize_test/IMG_' + str(num) + ' (1).jpg' for num in filenums]
+        filenames = ['/Users/jliemansifry/Desktop/outside_galvanize_test/IMG_'
+                     + str(num) + ' (1).jpg' for num in filenums]
     else:
         filenames = [df['base_filename'][true_idx] + cardinal_dir + '.png' 
                     for cardinal_dir in NESW]
@@ -149,55 +159,71 @@ def plot_shapefile(f, options = 'counties', more_options = None, cm = 'blues', d
             ax_to_add.imshow(imread(filename))
             ax_to_add.set_xticks([]); ax_to_add.set_yticks([])
             ax_to_add.set_ylabel(label)
-        y = 0.7
+        ys = [0.7, 0.5, 0.3, 0.1]
         labels = ['North', 'East', 'South', 'West']
-        for filename, label in zip(filenames, labels):
+        for filename, y, label in zip(filenames, ys, labels):
             add_image(filename, y, label)
-            y -= 0.2
-    # lt, lg = m(-105.5, 39) # test overplot a point
-    # m.plot(lt, lg, 'bo', markersize = 24)
     if save:
         if local:
-            plt.savefig('model_testing/county_model_v1.1_' + 'Denver.png', dpi = 150)
+            plt.savefig('model_testing/county_model_v1.2_' + 'Denver.png',
+                        dpi = 150)
         else:
-            plt.savefig('model_testing/county_model_v1.1_' + str(df['county'][true_idx]) + '_idx_' + str(true_idx) + '.png', dpi = 150)
+            plt.savefig('model_testing/county_model_v1.2_'
+                        + str(df['county'][true_idx]) + '_idx_'
+                        + str(true_idx) + '.png', dpi = 150)
     if show:
         plt.show()
 
-def patch_collection(shape):
-    patches = [Polygon(np.array(shape), True)]
-    pc = PatchCollection(patches, edgecolor='k', hatch = None, 
-                         linewidths=0.5, zorder=2)
-    return pc
-
 def plot_this_shapefile(version):
+    ''' 
+    INPUT:  (1) string: what shapefile to plot
+            version can = 'county' or 'highway' or 'routes' or 'majorroads' or
+            'localroads' or 'water' or 'rocktypes' or '12km' or '24km' or 
+            '100km' or '1deg'
+    OUTPUT: None
+
+    Lazy function so I don't have to remember all the names of the shapefiles.
+    This function, true to its name, will plot the shapefile type you specify.
+    '''
     if version == 'county':
-        plot_shapefile('shapefiles/Shape/GU_CountyOrEquivalent', options = 'counties')
+        plot_shapefile('shapefiles/Shape/GU_CountyOrEquivalent', 
+                        options = 'counties', show = True)
     elif version == 'highway':
-        plot_shapefile('shapefiles/Highways/SHP/STATEWIDE/HIGHWAYS_latlng', options = 'nofill')
+        plot_shapefile('shapefiles/Highways/SHP/STATEWIDE/HIGHWAYS_latlng', 
+                        options = 'nofill', show = True)
     elif version == 'routes':
-        plot_shapefile('shapefiles/Routes/SHP/STATEWIDE/ROUTES_latlng', options = 'nofill')
+        plot_shapefile('shapefiles/Routes/SHP/STATEWIDE/ROUTES_latlng', 
+                        options = 'nofill', show = True)
     elif version == 'majorroads':
-        plot_shapefile('shapefiles/MajorRoads/SHP/STATEWIDE/FCROADS_latlng', options = 'nofill')
+        plot_shapefile('shapefiles/MajorRoads/SHP/STATEWIDE/FCROADS_latlng', 
+                        options = 'nofill', show = True)
     elif version == 'localroads':
-        plot_shapefile('shapefiles/LocalRoads/SHP/STATEWIDE/LROADS_ogr', options = 'nofill')
+        plot_shapefile('shapefiles/LocalRoads/SHP/STATEWIDE/LROADS_ogr', 
+                        options = 'nofill', show = True)
     elif version == 'water':
-        plot_shapefile('shapefiles/water/watbnd_ogr')
+        plot_shapefile('shapefiles/water/watbnd_ogr', show = True)
     elif version == 'rocktypes':
-        plot_shapefile('shapefiles/COgeol_dd/cogeol_dd_polygon', options = 'rocktypes', cm = 'blues')
+        plot_shapefile('shapefiles/COgeol_dd/cogeol_dd_polygon', 
+                        options = 'rocktypes', cm = 'blues', show = True)
     elif version == '12km':
-        plot_shapefile('shapefiles/colorado_quadrants/CO_12km_ogr', options = 'other')
+        plot_shapefile('shapefiles/colorado_quadrants/CO_12km_ogr', 
+                        options = 'other', show = True)
     elif version == '24km':
-        plot_shapefile('shapefiles/colorado_quadrants/CO_24km_ogr', options = 'other')
+        plot_shapefile('shapefiles/colorado_quadrants/CO_24km_ogr', 
+                        options = 'other', show = True)
     elif version == '100km':
-        plot_shapefile('shapefiles/colorado_quadrants/CO_100km_ogr', options = 'other')
+        plot_shapefile('shapefiles/colorado_quadrants/CO_100km_ogr', 
+                        options = 'other', show = True)
     elif version == '1deg':
-        plot_shapefile('shapefiles/colorado_quadrants/CO_1deg_ogr', options = 'other')
+        plot_shapefile('shapefiles/colorado_quadrants/CO_1deg_ogr', 
+                        options = 'other', show = True)
+    else:
+        print 'Version not recognized.'
 
 def convert_shapefile_to_latlng_coord(h_shp):
-    ''' Input: Shapefile in projection coordinates. 
-        Output: Shapefile in lat/long coordinates for plotting with basemap.
-        _latlng will be added to the filename. 
+    ''' INPUT:  (1) Shapefile in projection coordinates. 
+        OUTPUT: (2) Shapefile in lat/long coordinates for plotting with 
+        basemap. _latlng will be added to the filename. 
         
         Alternatively (and much more simply):
         ogr2ogr -t_srs EPSG:4326 destination_filename.shp origin_filename.shp
@@ -223,24 +249,16 @@ def convert_shapefile_to_latlng_coord(h_shp):
             x, y = transform(orig, dest, lng, lat) 
             out_points = [(ln, la) for ln, la in zip(x, y)]
             feat['geometry']['coordinates'] = out_points
-            # if not any(isinstance(sublist, list) for sublist in out_points):
             output.write(feat)
 
-def convert_this_shapefile(version):
-    ''' Convert shapefiles using convert_shapefile_to_latlng_coord.
-    Everything in a function for clean testing purposes. '''
-    if version == 'localroads':
-        convert_shapefile_to_latlng_coord('shapefiles/LocalRoads/SHP/STATEWIDE/LROADS.shp')
-    elif version == 'water':
-        convert_shapefile_to_latlng_coord('shapefiles/water/watbnd.shp')
-    elif version == 'majorroads':
-        convert_shapefile_to_latlng_coord('shapefiles/MajorRoads/SHP/STATEWIDE/FCROADS.shp')
-    elif version == 'routes':
-        convert_shapefile_to_latlng_coord('shapefiles/Routes/SHP/STATEWIDE/ROUTES.shp')
-    elif version == 'highways':
-        convert_shapefile_to_latlng_coord('shapefiles/Highways/SHP/STATEWIDE/HIGHWAYS.shp')
-
 def load_features_and_shape(options):
+    ''' 
+    INPUT:  (1) string: which options of shapefiles and features to load
+    OUTPUT: (1) list of tuples: (feature, vector array of shapefile shape)
+
+    The list of tuples generated by this function can be searched through
+    to categorize a given lat/lng point by the metadata of some shapefile. 
+    '''
     if options == 'counties':
         fc = fiona.open("shapefiles/Shape/GU_CountyOrEquivalent.shp")
         feature_name_and_shape = [(fiona_shapefile['properties']['COUNTY_NAM'], 
@@ -255,11 +273,17 @@ def load_features_and_shape(options):
                                 for fiona_shapefile in fc]
     return feature_name_and_shape
 
-# def shape_contains(coord, options = 'counties'):
-    # if options == 'counties':
-        # fc = fiona.open("shapefiles/Shape/GU_CountyOrEquivalent.shp")
-
 def find_which_feature(coord, feature_name_and_shape):
+    ''' 
+    INPUT:  (1) tuple: (longitude, latitude) in degrees
+            (2) list of tuples: see function 'load_features_and_shape'
+    OUTPUT: (1) string: the metadata associated with the point belonging to
+                a certain shapefile
+
+    This is the accompanying function to 'load_features_and_shape' that will
+    return the metadata assocated with a given point belonging to a 
+    certain shapefile, as per the tuples generated by 'load_features_and_shape'
+    '''
     for feature_name, feature_shape in feature_name_and_shape:
         sh = sg.asShape(feature_shape)
         if sh.contains(shapely.geometry.Point(coord)):
@@ -268,9 +292,15 @@ def find_which_feature(coord, feature_name_and_shape):
             continue
 
 def load_geologic_history():
-    ''' Load the ages of each timeperiod that rocks were formed
-    (in millions of years). Used to decrease the number of unique
-    categories defining the state. '''
+    ''' 
+    INPUT:  (1) None
+    OUTPUT: (2) Dictionary of geologic period names and their associated
+                times (an average time)
+    
+    Load the ages of each timeperiod that rocks were formed
+    (in millions of years). Used to turn the rock metadata of geologic period
+    names into something easier to work with. 
+    '''
     geologic_times = {None: np.nan,
                     'Cambrian': 500,
                     'Cretaceous': 100,
