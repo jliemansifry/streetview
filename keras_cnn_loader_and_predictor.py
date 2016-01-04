@@ -1,18 +1,12 @@
-from keras.models import Sequential
 import theano
-from keras.layers.core import Merge
 from organizedImageData import write_filenames
 import pandas as pd
 import numpy as np
 from scipy.misc import imread
 from keras.models import model_from_json
-from keras.layers.core import Dense, Dropout, Activation, Flatten
-from keras.layers.convolutional import Convolution2D, MaxPooling2D
 from coloradoGIS import plot_shapefile
-import matplotlib.pyplot as plt
-# from keras.optimizers import SGD
 
-def load_data(category_name):
+def load_data():
     ''' 
     INPUT:  (1) string: The category name that is being predicted
     OUTPUT: (1) df: The full Pandas DataFrame that was loaded and used
@@ -20,34 +14,27 @@ def load_data(category_name):
             (3) 1D numpy array: All y data (target category indices)
             (4) list: corresponding category names to (3)
     '''
-    df = pd.read_pickle("big_list_with_only_4_rock_classes_thru_14620.pkl")
+    df = pd.read_pickle("big_list_20000_with_categories.pkl")
     write_filenames(df, options = 'data_80x50')
     NESW = ['N', 'E', 'S', 'W']
-    count = df.shape[0]
+    count = 19953
     all_X_data = np.zeros((count*4, 50, 80, 3))
-    if category_name == 'elev_gt_1800':
-        categories = [False, True]
-    elif category_name == 'county':
-        categories = list(df['county'].unique())
-    elif category_name == 'mcp':
-        categories = 'mcp'
-    elif category_name == 'rock_age':
-        categories = ['0-5', '5-20', '20-250', '250-3000']
+    categories = list(df['county'].unique())
+    categories.pop(29) # remove none
+    category_name = 'county'
     all_y_data = np.zeros(count*4)
     print 'Loading data...'
     for df_idx in xrange(count):
         sub_idx = 0
         for cardinal_dir in NESW:
-            image_name = df.iloc[df_idx]['base_filename'] + cardinal_dir + '80x50.png'
+            image_name = (df.iloc[df_idx]['base_filename'] 
+                          + cardinal_dir + '80x50.png')
+            cnty = df.iloc[df_idx][category_name]
+            if pd.isnull(cnty):
+                continue
+            else:
+                image_class = categories.index(cnty)
             image_data = imread(image_name)
-            if category_name == 'elev_gt_1800' or category_name == 'mcp' or category_name == 'rock_age':
-                image_class = categories.index(df.iloc[df_idx][category_name])
-            elif category_name == 'county':
-                cnty = df.iloc[df_idx][category_name]
-                if pd.isnull(cnty):
-                    image_class = 65
-                else:
-                    image_class = categories.index(cnty)
             idx_to_write = df_idx * 4 + sub_idx
             all_X_data[idx_to_write] = image_data
             all_y_data[idx_to_write] = image_class
@@ -58,9 +45,11 @@ def load_data(category_name):
     return df, X, all_y_data, categories
 
 def load_iPhone_images():
-    X = np.zeros((12, 50, 80, 3))
+    X = np.zeros((4, 50, 80, 3))
     img_nums = range(5908, 5910) + range(5911, 5921)
-    img_names = ['/Users/jliemansifry/Desktop/outside_galvanize_test/IMG_' + str(num) + '.jpg' for num in img_nums]
+    img_names = ['/Users/jliemansifry/Desktop/outside_galvanize_test/IMG_'
+                 + str(num) + '.jpg' 
+                 for num in img_nums]
     for idx, img_name in enumerate(img_names):
         X[idx] = imread(img_name)
     X = X.reshape(X.shape[0], 3, 50, 80)
@@ -97,7 +86,9 @@ def get_activations(model, layer, X_batch):
                 activations for
     OUTPUT: (1) numpy array: Activations for that layer
     '''
-    get_activations = theano.function([model.layers[0].input], model.layers[layer].get_output(train=False), allow_input_downcast=True)
+    get_activations = theano.function([model.layers[0].input], 
+                                       model.layers[layer].get_output(train = False), 
+                                       allow_input_downcast = True)
     activations = get_activations(X_batch)
     return activations
 
@@ -151,7 +142,9 @@ def test_equality_of_build_methods(model, modelN):
     print 'It is {} that the weights are the same'.format(all(
         merged_layer_weights[7] == N_weights[7]))
 
-def return_specified_proba(X, idx, model_name, categories, df, NESW_merged = None, local = False, show = False, save = False, two_sets_of_NESW = False):
+def return_specified_proba(X, idx, model_name, categories, df, 
+                           NESW_merged = None, local = False, 
+                           show = False, save = False, two_sets_of_NESW = False):
     ''' 
     INPUT:  (1) 4D numpy array: All X data
             (2) integer: index to determine probabilities for
@@ -179,16 +172,32 @@ def return_specified_proba(X, idx, model_name, categories, df, NESW_merged = Non
     S_idx = idx * 4 + 2; W_idx = idx * 4 + 3
     end_idx = idx * 4 + 4
     if two_sets_of_NESW:
-        final_probas = NESW_merged.predict_proba([X[N_idx:end_idx:4], X[E_idx:end_idx:4], X[S_idx:end_idx:4], X[W_idx:end_idx:4], X[N_idx:end_idx:4], X[E_idx:end_idx:4], X[S_idx:end_idx:4], X[W_idx:end_idx:4]], batch_size = 1)[0]
+        final_probas = NESW_merged.predict_proba([X[N_idx:end_idx:4], 
+                                                  X[E_idx:end_idx:4], 
+                                                  X[S_idx:end_idx:4], 
+                                                  X[W_idx:end_idx:4], 
+                                                  X[N_idx:end_idx:4], 
+                                                  X[E_idx:end_idx:4], 
+                                                  X[S_idx:end_idx:4], 
+                                                  X[W_idx:end_idx:4]], 
+                                                  batch_size = 1)[0]
     else:
-        final_probas = NESW_merged.predict_proba([X[N_idx:end_idx:4], X[E_idx:end_idx:4], X[S_idx:end_idx:4], X[W_idx:end_idx:4]], batch_size = 1)[0]
+        final_probas = NESW_merged.predict_proba([X[N_idx:end_idx:4], 
+                                                  X[E_idx:end_idx:4], 
+                                                  X[S_idx:end_idx:4], 
+                                                  X[W_idx:end_idx:4]], 
+                                                  batch_size = 1)[0]
     probas_dict = {c: p for c, p in zip(categories, final_probas)}
     if show:
         print 'showing'
-        plot_shapefile(f, options = 'counties', more_options = 'by_probability', cm = 'continuous', df = df, probas_dict = probas_dict, local = local, true_idx = idx, show = True, save = False)
+        plot_shapefile(f, options = 'counties', more_options = 'by_probability', 
+                       cm = 'continuous', df = df, probas_dict = probas_dict, 
+                       local = local, true_idx = idx, show = True, save = False)
     if save:
         print 'saving'
-        plot_shapefile(f, options = 'counties', more_options = 'by_probability', cm = 'continuous', df = df, probas_dict = probas_dict, local = local, true_idx = idx, show = False, save = True)
+        plot_shapefile(f, options = 'counties', more_options = 'by_probability', 
+                       cm = 'continuous', df = df, probas_dict = probas_dict, 
+                       local = local, true_idx = idx, show = False, save = True)
     if model_built:
         return probas_dict, NESW_merged
 
@@ -207,19 +216,27 @@ def calc_top_n_acc(X, y, NESW_merged, n, idx, end_idx, two_sets_of_NESW = True):
     S_idx = idx * 4 + 2; W_idx = idx * 4 + 3
     end_idx = end_idx * 4
     if two_sets_of_NESW:
-        probas = NESW_merged.predict_proba([X[N_idx:end_idx:4], X[E_idx:end_idx:4], X[S_idx:end_idx:4], X[W_idx:end_idx:4], X[N_idx:end_idx:4], X[E_idx:end_idx:4], X[S_idx:end_idx:4], X[W_idx:end_idx:4]], batch_size = 32)
+        probas = NESW_merged.predict_proba([X[N_idx:end_idx:4], 
+                                            X[E_idx:end_idx:4], 
+                                            X[S_idx:end_idx:4], 
+                                            X[W_idx:end_idx:4], 
+                                            X[N_idx:end_idx:4], 
+                                            X[E_idx:end_idx:4], 
+                                            X[S_idx:end_idx:4], 
+                                            X[W_idx:end_idx:4]], 
+                                            batch_size = 32)
     else:
-        probas = NESW_merged.predict_proba([X[N_idx:end_idx:4], X[E_idx:end_idx:4], X[S_idx:end_idx:4], X[W_idx:end_idx:4]], batch_size = 32)
+        probas = NESW_merged.predict_proba([X[N_idx:end_idx:4], 
+                                            X[E_idx:end_idx:4], 
+                                            X[S_idx:end_idx:4], 
+                                            X[W_idx:end_idx:4]], 
+                                            batch_size = 32)
     y_true = y[N_idx:end_idx:4]
     top_n_classes = np.fliplr(np.argsort(probas, axis = 1))[:, :n]
-    in_top_n = [1 if y_true[row_idx] in row else 0 for row_idx, row in enumerate(top_n_classes)]
+    in_top_n = [1 if y_true[row_idx] in row 
+                else 0 
+                for row_idx, row in enumerate(top_n_classes)]
     return np.sum(in_top_n) / float(len(y_true))
 
 if __name__ == '__main__':
-    df, X, y, categories = load_data('county')
-    # model_name = 'models/county/_NESW_dense256_relu_drop05_dense3_/county_64_batch_16_epoch_14621_NESW_dense256_relu_drop05_dense3_'
-    model_name = 'models/county/_NESW_doubleconv_3and5_firstlayer_128_premerge_1024_dense_after_merge_/county_32_batch_16_epoch_14621_NESW_doubleconv_3and5_firstlayer_128_premerge_1024_dense_after_merge_'
-    # modelN, modelE, modelS, modelW = load_models(model_name)
-    #X_merged = get_merged_activations(modelN, modelE, modelS, modelW, X)
-    #NESW = build_merged_model_as_standalone(X_merged, model_name, categories)
-    #final_probas = NESW_merged.predict_proba([X[::4], X[1::4], X[2::4], X[3::4]], batch_size = 32)
+    df, X, y, categories = load_data()
