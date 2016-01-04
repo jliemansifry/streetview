@@ -37,8 +37,9 @@ def make_cmyk_greyscale_continuous_cmap():
     The new matplotlib has colormaps that are continuous, but they all
     start from a dark color. The colors below start from white.
     '''
-    colors = [(255,255,255),(210,253,255),(184,252,255),
-            (192,244,204),(155,255,145),(210,200,12),(230,180,7),(236,124,13),
-            (233,100,25),(228,30,45),(198,0,46),(103,0,51)] 
+    colors = [(255, 255, 255), (210, 253, 255), (184, 252, 255),
+            (192, 244, 204), (155, 255, 145), (210, 200, 12),
+            (230, 180, 7), (236, 124, 13), (233, 100, 25),
+            (228, 30, 45),(198, 0, 46), (103, 0, 51)] 
     cont_cmap = make_cmap(colors, bit=True)
     return cont_cmap
