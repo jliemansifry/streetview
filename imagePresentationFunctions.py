@@ -1,9 +1,12 @@
 import matplotlib
 import sys
 import numpy as np
+
 def make_cmap(colors, position=None, bit=False):
-    ''' Tools to make the custom color map that is 
-    continuous in both rgb, cmyk, and greyscale'''
+    ''' 
+    INPUT:  (1) list of RGB tuples to make the colormap from
+    OUTPUT: (1) matplotlib colormap
+    '''
     bit_rgb = np.linspace(0,1,256)
     if position == None:
         position = np.linspace(0,1,len(colors))
@@ -25,13 +28,15 @@ def make_cmap(colors, position=None, bit=False):
     return cmap
 
 def make_cmyk_greyscale_continuous_cmap():
-    ''' This series of colors makes a nice colormap that is good for 
+    ''' 
+    INPUT:  None
+    OUTPUT: (1) matplotlib colormap
+
+    This series of colors makes a nice colormap that is good for 
     'heatmap' style plots. It is continuous in cmyk, rgb, and greyscale. 
-    The new matplotlib has colormaps that do this, but I wrote this before
-    that version was released. '''
-    # colors = [(255,255,255),(248,255,255),(240,255,255),(210,253,255),(184,252,255),
-            # (192,244,204),(155,255,145),(210,200,12),(230,180,7),(236,124,13),
-            # (233,100,25),(228,30,45),(198,0,46),(103,0,51)] 
+    The new matplotlib has colormaps that are continuous, but they all
+    start from a dark color. The colors below start from white.
+    '''
     colors = [(255,255,255),(210,253,255),(184,252,255),
             (192,244,204),(155,255,145),(210,200,12),(230,180,7),(236,124,13),
             (233,100,25),(228,30,45),(198,0,46),(103,0,51)] 
