@@ -1,11 +1,8 @@
 import cv2
 from skimage.feature import hog
+from scipy.misc import imread
 from skimage import color
 import numpy as np
-
-def cv2_image(img_filename):
-    ''' Return the cv2 image of the given filename. '''
-    return cv2.imread(img_filename)
 
 def corner_frac(img, h = 400, w = 640, show = False):
     ''' Takes a greyscale 400x640 image (default). 
@@ -52,6 +49,6 @@ def sklearn_hog(img_name):
     ''' Sklearn's Histogram of Oriented Gradients (HOG) functionality
     was better than cv2. Here we calculate the feature vector from HOG. 
     Returns the feature vector and the image (for display). '''
-    greyscale = color.rgb2gray(cv2_image(img_name))
+    greyscale = color.rgb2gray(imread(img_name))
     fd, hog_image = hog(greyscale, orientations=8, pixels_per_cell=(8, 8), cells_per_block=(4, 4), visualise=True, normalise = True)
     return fd, hog_image
