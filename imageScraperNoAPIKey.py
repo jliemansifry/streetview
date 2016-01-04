@@ -10,6 +10,18 @@ gmaps_API = googlemaps.Client(key='*********')
 geocoder_API = '*******'
 streetview_API_key = '********'
 
+''' 
+This scraper utilizes the website instantstreetview.com to find 
+valid latitude/longitude coordinates for which there is streetview data. 
+I played around with querying the streetview API with locations from 
+road shapefiles in Colorado, but the miss rate was simply too high: it wasn't 
+worth having 50% of the downloaded images be images that said "Sorry, we have
+no imagery here." It's possible to query the streetview API directly in 
+javascript, but the Python interface doesn't allow this. Utilizing the middleman
+of instantstreetview made things easier at the scale of my project, but this 
+technique wouldn't work on a larger scale. 
+'''
+
 def save_image(coord, heading, pitch = 5, fov = 90, loc = 'data'):
     '''
     INPUT:  (1) tuple: latitude and longitude coordinates, in degrees
@@ -30,8 +42,12 @@ def save_image(coord, heading, pitch = 5, fov = 90, loc = 'data'):
         sufx = 'S'
     elif heading == 270:
         sufx = 'W'
-    web_address = 'https://maps.googleapis.com/maps/api/streetview?size=640x400&location='+str(coord[0])+','+str(coord[1])+'&fov='+str(fov)+'&heading='+str(heading)+'&pitch='+str(pitch)+'&key='+streetview_API_key
-    filename = loc + '/lat_'+str(coord[0])[:8]+',long_'+str(coord[1])[:8]+'_'+sufx+'.png'
+    web_address = ('https://maps.googleapis.com/maps/api/streetview?size=640x400&location='
+            + str(coord[0]) + ',' + str(coord[1]) + '&fov=' 
+            + str(fov) + '&heading=' + str(heading) + '&pitch='
+            + str(pitch) + '&key=' + streetview_API_key)
+    filename = (loc + '/lat_'+str(coord[0])[:8] + ',long_' 
+            + str(coord[1])[:8]+'_'+sufx+'.png')
     urllib.urlretrieve(web_address, filename = filename)
 
 def reverse_geocode(coord):
@@ -50,15 +66,13 @@ def get_elev(coord):
     elev = gmaps_API.elevation((coord[0],coord[1]))[0]['elevation']
     return elev
 
-# driver = webdriver.Firefox()
-
 def search_colorado():
     ''' 
     INPUT:  None
     OUTPUT: None
 
-    Search 'Colorado, USA' on instantstreetview.com, a website that pulls up valid 
-    streetview coordinates.
+    Search 'Colorado, USA' on instantstreetview.com, 
+    a website that pulls up valid streetview coordinates.
     '''
     driver.get('http://www.instantstreetview.com/')
     searcher = driver.find_element_by_id("search")
@@ -97,7 +111,8 @@ def get_date(coords):
     INPUT:  None
     OUTPUT: string: the date the image was taken
     '''
-    web_url = 'http://maps.google.com/maps?q=&layer=c&cbll='+str(coords[0])+','+str(coords[1])
+    web_url = ('http://maps.google.com/maps?q=&layer=c&cbll=' 
+                + str(coords[0]) + ',' + str(coords[1]))
     driver.get(web_url)
     time.sleep(5)
     try:
@@ -114,9 +129,10 @@ def main():
     OUTPUT: None
 
     Do everything. Go to the website, search and zoom in on Colorado, and get
-    random valid coordinates for street view locations in Colorado. Reverse geocode
-    the valid coordinates to get the elevation and full address of the location. 
-    Get the date the image was taken. Save everything to a .csv. 
+    random valid coordinates for street view locations in Colorado. 
+    Reverse geocode the valid coordinates to get the elevation and full 
+    address of the location. Get the date the image was taken. 
+    Save everything to a .csv. 
     '''
     global random_button, driver
     driver = webdriver.Firefox()
