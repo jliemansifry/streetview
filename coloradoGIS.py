@@ -185,40 +185,23 @@ def plot_this_shapefile(version):
     Lazy function so I don't have to remember all the names of the shapefiles.
     This function, true to its name, will plot the shapefile type you specify.
     '''
-    if version == 'county':
-        plot_shapefile('shapefiles/Shape/GU_CountyOrEquivalent', 
-                        options = 'counties', show = True)
-    elif version == 'highway':
-        plot_shapefile('shapefiles/Highways/SHP/STATEWIDE/HIGHWAYS_latlng', 
-                        options = 'nofill', show = True)
-    elif version == 'routes':
-        plot_shapefile('shapefiles/Routes/SHP/STATEWIDE/ROUTES_latlng', 
-                        options = 'nofill', show = True)
-    elif version == 'majorroads':
-        plot_shapefile('shapefiles/MajorRoads/SHP/STATEWIDE/FCROADS_latlng', 
-                        options = 'nofill', show = True)
-    elif version == 'localroads':
-        plot_shapefile('shapefiles/LocalRoads/SHP/STATEWIDE/LROADS_ogr', 
-                        options = 'nofill', show = True)
-    elif version == 'water':
-        plot_shapefile('shapefiles/water/watbnd_ogr', show = True)
-    elif version == 'rocktypes':
-        plot_shapefile('shapefiles/COgeol_dd/cogeol_dd_polygon', 
-                        options = 'rocktypes', cm = 'blues', show = True)
-    elif version == '12km':
-        plot_shapefile('shapefiles/colorado_quadrants/CO_12km_ogr', 
-                        options = 'other', show = True)
-    elif version == '24km':
-        plot_shapefile('shapefiles/colorado_quadrants/CO_24km_ogr', 
-                        options = 'other', show = True)
-    elif version == '100km':
-        plot_shapefile('shapefiles/colorado_quadrants/CO_100km_ogr', 
-                        options = 'other', show = True)
-    elif version == '1deg':
-        plot_shapefile('shapefiles/colorado_quadrants/CO_1deg_ogr', 
-                        options = 'other', show = True)
+    shapefiles_dict = {'county': ('shapefiles/Shape/GU_CountyOrEquivalent', 'counties'), 
+                       'highway': ('shapefiles/Highways/SHP/STATEWIDE/HIGHWAYS_latlng', 'nofill'), 
+                       'routes': ('shapefiles/Routes/SHP/STATEWIDE/ROUTES_latlng', 'nofill'),  
+                       'majorroads': ('shapefiles/MajorRoads/SHP/STATEWIDE/FCROADS_latlng', 'nofill'),
+                       'localroads': ('shapefiles/LocalRoads/SHP/STATEWIDE/LROADS_ogr', 'nofill'),
+                       'water': ('shapefiles/water/watbnd_ogr', 'random_choice'),
+                       'rocktypes': ('shapefiles/COgeol_dd/cogeol_dd_polygon', 'rocktypes'),
+                       '12km': ('shapefiles/colorado_quadrants/CO_12km_ogr', 'other'),
+                       '24km': ('shapefiles/colorado_quadrants/CO_24km_ogr', 'other'),
+                       '100km': ('shapefiles/colorado_quadrants/CO_100km_ogr', 'other'),
+                       '1deg': ('shapefiles/colorado_quadrants/CO_1deg_ogr', 'other')}
+    shapefile_version = shapefiles_dict[version][0]
+    shapefile_options = shapefiles_dict[version][1]
+    if version != 'rocktypes':
+        plot_shapefile(shapefile_version, options = shapefile_options, show = True)
     else:
-        print 'Version not recognized.'
+        plot_shapefile(shapefile_version, options = shapefile_options, cm = 'blues', show = True)
 
 def convert_shapefile_to_latlng_coord(h_shp):
     ''' INPUT:  (1) Shapefile in projection coordinates. 
