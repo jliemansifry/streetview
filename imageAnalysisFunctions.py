@@ -21,7 +21,7 @@ def corner_frac(img, h=400, w=640, show=False):
     avg_dist = 1.8e8  # good middleground determined over many images
     dist_metric = dist > 0.01 * avg_dist
     corners_google_watermark = len(dist_metric[dist_metric[380:][:] == True])
-    true_corners = len(dist_metric[dist_metric == True])
+    true_corners = len(dist_metric[dist_metric[:] == True])
     num_corners = float(true_corners - corners_google_watermark)
     if show:
         img[dist > 0.01 * dist.max()] = [0, 0, 255]
