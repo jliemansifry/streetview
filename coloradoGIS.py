@@ -162,7 +162,8 @@ def plot_shapefile(f, options='counties', more_options=None, cm='blues',
         def add_image(filename, y, label):
             ax_to_add = fig.add_axes([0., y, .32, .20])
             ax_to_add.imshow(imread(filename))
-            ax_to_add.set_xticks([]); ax_to_add.set_yticks([])
+            ax_to_add.set_xticks([])
+            ax_to_add.set_yticks([])
             ax_to_add.set_ylabel(label)
         ys = [0.7, 0.5, 0.3, 0.1]
         labels = ['North', 'East', 'South', 'West']
@@ -278,16 +279,16 @@ def load_features_and_shape(options):
     '''
     if options == 'counties':
         fc = fiona.open("shapefiles/Shape/GU_CountyOrEquivalent.shp")
-        feature_name_and_shape = [(fiona_shapefile['properties']['COUNTY_NAM'],
-                                  fiona_shapefile['geometry'])
-                                  for fiona_shapefile in fc
-                                  if fiona_shapefile['properties']['STATE_NAME'] ==
+        feature_name_and_shape = [(fc_shape['properties']['COUNTY_NAM'],
+                                  fc_shape['geometry'])
+                                  for fc_shape in fc
+                                  if fc_shape['properties']['STATE_NAME'] ==
                                   'Colorado']
     if options == 'geologic_history':
         fc = fiona.open('shapefiles/COgeol_dd/cogeol_dd_polygon.shp')
-        feature_name_and_shape = [(fiona_shapefile['properties']['UNIT_AGE'],
-                                  fiona_shapefile['geometry'])
-                                  for fiona_shapefile in fc]
+        feature_name_and_shape = [(fc_shape['properties']['UNIT_AGE'],
+                                  fc_shape['geometry'])
+                                  for fc_shape in fc]
     return feature_name_and_shape
 
 
