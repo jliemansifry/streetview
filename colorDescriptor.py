@@ -184,8 +184,11 @@ class ColorDescriptor(object):
             If show == True, nothing will be returned. '''
             fig = plt.figure()
             ax = Axes3D(fig)
-            ax.set_xticks([]); ax.set_yticks([]); ax.set_zticks([])
-            ax.w_xaxis.set_ticklabels([]); ax.w_yaxis.set_ticklabels([])
+            ax.set_xticks([])
+            ax.set_yticks([])
+            ax.set_zticks([])
+            ax.w_xaxis.set_ticklabels([])
+            ax.w_yaxis.set_ticklabels([])
             ax.w_zaxis.set_ticklabels([])
         else:
             ax = base_ax
