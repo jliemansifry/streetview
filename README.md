@@ -9,6 +9,9 @@ The emerging field of feature recognition in images is revolutionizing how well 
   * [Speeded-Up Robust Features (SURF)](#speeded-up-robust-features)
   * [Pros and Cons of Vector Based Methods](#pros-and-cons-of-vector-based-methods)
 3. [Convolutional Neural Networks](#convolutional-neural-networks)
+  * [Training the Neural Nework](#training-the-neural-network)
+  * [Results](#results)
+  * [iPhone Validation](iphone-validation)
 
 
 ## The Data
@@ -63,16 +66,29 @@ Vector based methods can work remarkably well at matching images within a datase
 Additionally, vector based methods are not translationally invariant at their core. If two otherwise quite similar images were shifted from one another, the computer would no longer see them as being so similar. While possible to account for transformations of various kinds (rotation, translation, reflection, scaling, etc.) when comparing images, this would drive the computational requirements through the roof for a dataset of this size. It simply isn't practical when you need to compare your 'search' image to thousands of other images. 
 
 ## Convolutional Neural Networks 
-Description coming soon!
+Deep Convolutional Neural Networks (DCNNs) have proven to be the most flexible and powerful tool for image recognition, achieving near-human performance on a variety of classification tasks. Their ability to recognize abstract features that distinguish classes, translational invariance by pooling, and capacity to exclude unreasonable patterns given enough data are just a few of many reasons that DCNNs significantly outperform vector based methods. Utilizing a DCNN to predict location in Colorado from the google street view data was a logical step after recognizing the limitations of the vector based methods previously explored.
+
+### Training the Neural Network
+I trained my DCNN using Keras and Theano on an AWS GPU-optimized machine complete with CUDA. In building the net, I initially started by mimicking the structure of a few past winners of the ImageNet classification competition (Krizhevsky, A., et al, 2012; He, K., et al, 2015). However, their nets were designed to classify 1.2 million images of size 224x224 pixels into one of 1,000 classes, whereas I was working with 80,000 images of size 80x50 and trying to classify into one of 64 classes. This basic difference meant that not much of their structure mapped onto my problem. For example, Krizhevsky et al. used 11x11 convolutions with stride 4 in the first layer, dimensionality significantly out of scale for my images.
+
+Although the images were scraped at a resolution of 640x400 pixels, the time needed to train even the most basic of models was simply too great for me to use these full resolution images in the span of this 3 week Galvanize capstone project. In downsizing them to 80x50, I certainly forfeited some distinguishing details, but gained the ability to iterate through a multitude of model structures and ensure I was squeezing every last drop of information out of the images. A thoroughly trained model on low resolution data will almost always outperform an ill-trained model utilizing high resolution images.
+
+A cartoon of the final model structure used is below. Images taken facing in each cardinal direction (20,000 apiece) were fed into the network separately, with each pipeline having unique kernels and weights. After many iterations, I found that having 2 pipelines for each cardinal direction, with differing initial convolutional sizes (3x3 and 5x5), resulted in a significant jump in validation accuracy, holding everything else constant (from 0.18 to 0.23). Adjusting the number of nodes, dropout, and utilizing advanced activations (Leaky ReLU any Parametric ReLU) further raised the validation accuracy to 0.38 on the same test set. 
 
 ![Image](/images_for_project_overview/model_architecture.png)
 
+### Results
+
 A teaser is below of how well my CNN is doing. The images on the left act as the 'search' images and come from the shaded county. The colors correspond to the predicted probabilities (according to the CNN) of the images coming from each of the other counties in Colorado.
+
+More info coming soon. 
 
 ![Image](/images_for_project_overview/county_model_v1.2_Summit_idx_203.png)
 ![Image](/images_for_project_overview/county_model_v1.2_Jefferson_idx_156.png)
 ![Image](/images_for_project_overview/county_model_v1.2_Garfield_idx_202.png)
 ![Image](/images_for_project_overview/county_model_v1.2_El Paso_idx_166.png)
+
+### iPhone Validation
 
 ![Image](/images_for_project_overview/county_model_v1.2_Denver.png)
 
