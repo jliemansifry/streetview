@@ -11,7 +11,7 @@ The emerging field of feature recognition in images is revolutionizing how well 
 3. [Convolutional Neural Networks](#convolutional-neural-networks)
   * [Training the Neural Nework](#training-the-neural-network)
   * [Results](#results)
-  * [iPhone Validation](iphone-validation)
+  * [iPhone Validation](#iphone-validation)
 
 
 ## The Data
