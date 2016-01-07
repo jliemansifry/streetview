@@ -73,15 +73,18 @@ I trained my DCNN using Keras and Theano on an AWS GPU-optimized machine complet
 
 Although the images were scraped at a resolution of 640x400 pixels, the time needed to train even the most basic of models was simply too great for me to use these full resolution images in the span of this 3 week Galvanize capstone project. In downsizing them to 80x50, I certainly forfeited some distinguishing details, but gained the ability to iterate through a multitude of model structures and ensure I was squeezing every last drop of information out of the images. A thoroughly trained model on low resolution data will almost always outperform an ill-trained model utilizing high resolution images.
 
-A cartoon of the final model structure used is below. Images taken facing in each cardinal direction (20,000 apiece) were fed into the network separately, with each pipeline having unique kernels and weights. After many iterations, I found that having 2 pipelines for each cardinal direction, with differing initial convolutional sizes (3x3 and 5x5), resulted in a significant jump in validation accuracy, holding everything else constant (from 0.18 to 0.23). Adjusting the number of nodes, dropout, and utilizing advanced activations (Leaky ReLU any Parametric ReLU) further raised the validation accuracy to 0.38 on the same test set. 
+A cartoon of the final model structure used is below. Images taken facing in each cardinal direction (20,000 apiece) were fed into the network separately, with each pipeline having unique kernels and weights. After many iterations, I found that having 2 pipelines for each cardinal direction, with differing initial convolutional sizes (3x3 and 5x5), resulted in a significant jump in validation accuracy, holding everything else constant (from 0.18 to 0.23). Adjusting the number of nodes, dropout, and utilizing advanced activations (Leaky ReLU and Parametric ReLU) further raised the validation accuracy to 0.38 on the same test set. 
 
 ![Image](/images_for_project_overview/model_architecture.png)
 
 ### Results
 
-A teaser is below of how well my CNN is doing. The images on the left act as the 'search' images and come from the shaded county. The colors correspond to the predicted probabilities (according to the CNN) of the images coming from each of the other counties in Colorado.
+Below are a few examples of how well the net is doing. The images on the left act as the 'search' images and come from the shaded county. Here they are presented in full 640x400 resolution, though in reality the net was fed the 80x50 versions of these images. The colors correspond to the predicted probabilities (according to the CNN) of the images coming from each of the counties of Colorado. 
 
-More info coming soon. 
+In each of the examples, the net predicts the counties where the features detected in the 'search' images best match the learned features from seeing hundreds of google street view images during training. 
+
+In the first example, the net correctly predicts Summit county, but neighboring Eagle county also receives a high probability, as the net has learned it also shares the snow/trees/mountain features that Summit county has. With the second set of images, clearly suburban, the net correctly predicts Jefferson county, and also assigns a non-zero probability to all the other counties in Colorado that have some measure of suburban sprawl. The net incorrectly guesses Mesa county when the true county was Garfield in the third example, but is clearly in the correct geographic region of Colorado. In the fourth example, there are few distinguishing features, other than perhaps *not mountains*. Sure enough, the net recognizes that the images are not from the mountains, but isn't sure where in the plains the images are from either (not that a human could do much better). 
+
 
 ![Image](/images_for_project_overview/county_model_v1.2_Summit_idx_203.png)
 ![Image](/images_for_project_overview/county_model_v1.2_Jefferson_idx_156.png)
@@ -90,7 +93,6 @@ More info coming soon.
 
 ### iPhone Validation
 
+Out of curiosity, I went out to Platte Street in Denver (right outside Galvanize) and took photos facing North, South, East, and West with my iPhone. Sure enough, the net correctly identified these images as being from Denver!
+
 ![Image](/images_for_project_overview/county_model_v1.2_Denver.png)
-
-
-
