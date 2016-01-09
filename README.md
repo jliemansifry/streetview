@@ -12,7 +12,7 @@ The emerging field of feature recognition in images is revolutionizing how well 
   * [Training the Neural Nework](#training-the-neural-network)
   * [Results](#results)
   * [iPhone Validation](#iphone-validation)
-4. [Author's Note](#author's-note)
+4. [Author's Note](#a-note-from-the-author)
 
 ## The Data
 
@@ -98,6 +98,6 @@ Out of curiosity, I went out to Platte Street in Denver (right outside Galvanize
 
 It would be great to continue assessing this model with more images not from google street view in order to see how it performs in various circumstances. It is worth noting that the net was trained with images always taken on a road, so images from other situations (ie. a hike) wouldn't perform as well. Given more time, I would have loved to include geotagged images from Flickr, Imgur, etc., in order to improve performance. 
 
-## Author's Note
+## A Note From the Author
 
 Questions? Comments? Want to try some transfer learning with my trained model? Want to get your hands on all the images I used? Contact me at jliemansifry@gmail.com! 
