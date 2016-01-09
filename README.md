@@ -12,7 +12,7 @@ The emerging field of feature recognition in images is revolutionizing how well 
   * [Training the Neural Nework](#training-the-neural-network)
   * [Results](#results)
   * [iPhone Validation](#iphone-validation)
-4. [Author's Note](#a-note-from-the-author)
+4. [A Note From the Author](#a-note-from-the-author)
 
 ## The Data
 
