@@ -12,7 +12,7 @@ The emerging field of feature recognition in images is revolutionizing how well 
   * [Training the Neural Nework](#training-the-neural-network)
   * [Results](#results)
   * [iPhone Validation](#iphone-validation)
-
+4. [Author's Note](#author's-note)
 
 ## The Data
 
@@ -85,7 +85,6 @@ In each of the examples, the net predicts the counties where the features detect
 
 In the first example, the net correctly predicts Summit county, but neighboring Eagle county also receives a high probability, as the net has learned it also shares the snow/trees/mountain features that Summit county has. With the second set of images, clearly suburban, the net correctly predicts Jefferson county, and also assigns a non-zero probability to all the other counties in Colorado that have some measure of suburban sprawl. The net incorrectly guesses Mesa county when the true county was Garfield in the third example, but is clearly in the correct geographic region of Colorado. In the fourth example, there are few distinguishing features, other than perhaps *not mountains*. Sure enough, the net recognizes that the images are not from the mountains, but isn't sure where in the plains the images are from either (not that a human could do much better). 
 
-
 ![Image](/images_for_project_overview/county_model_v1.2_Summit_idx_203.png)
 ![Image](/images_for_project_overview/county_model_v1.2_Jefferson_idx_156.png)
 ![Image](/images_for_project_overview/county_model_v1.2_Garfield_idx_202.png)
@@ -93,6 +92,12 @@ In the first example, the net correctly predicts Summit county, but neighboring 
 
 ### iPhone Validation
 
-Out of curiosity, I went out to Platte Street in Denver (right outside Galvanize) and took photos facing North, South, East, and West with my iPhone. Sure enough, the net correctly identified these images as being from Denver!
+Out of curiosity, I went out to Platte Street in Denver (right outside Galvanize) and took photos facing North, South, East, and West with my iPhone. Sure enough, the net correctly identified these images as being from Denver! 
 
 ![Image](/images_for_project_overview/county_model_v1.2_Denver.png)
+
+It would be great to continue assessing this model with more images not from google street view in order to see how it performs in various circumstances. It is worth noting that the net was trained with images always taken on a road, so images from other situations (ie. a hike) wouldn't perform as well. Given more time, I would have loved to include geotagged images from Flickr, Imgur, etc., in order to improve performance. 
+
+## Author's Note
+
+Questions? Comments? Want to try some transfer learning with my trained model? Want to get your hands on all the images I used? Contact me at jliemansifry@gmail.com! 
