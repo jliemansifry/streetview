@@ -34,7 +34,7 @@ def load_data():
     total_num_images = unique_count * unique_directions
     all_X_data = np.zeros((total_num_images, 50, 80, 3))
     categories = df['county'].unique()
-    null_categories = np.where(pd.isnull(categories))[0]
+    null_categories = np.where(pd.isnull(categories))[0][0]
     category_list = list(categories)
     category_list.pop(null_categories)
     category_name = 'county'
@@ -49,13 +49,17 @@ def load_data():
             if pd.isnull(cnty):
                 continue
             else:
-                image_class = categories.index(cnty)
+                image_class = category_list.index(cnty)
             image_data = imread(image_name)
             idx_to_write = df_idx * unique_directions + sub_idx
             all_X_data[idx_to_write] = image_data
             all_y_data[idx_to_write] = image_class
             sub_idx += 1
-    return df, all_X_data, all_y_data, category_name, categories, unique_count
+    
+    all_X_data = all_X_data.reshape(all_X_data.shape[0], 3, 50, 80)
+    all_X_data.astype('float32')
+    all_X_data /= 255.
+    return df, all_X_data, all_y_data, category_name, categories, category_list, unique_count
 
 
 def load_iPhone_images():
@@ -268,4 +272,4 @@ def calc_top_n_acc(X, y, NESW_merged, n, idx, end_idx, two_sets_of_NESW=True):
 
 
 if __name__ == '__main__':
-    df, X, y, categories = load_data()
+    df, X, y, category_name, categories65, categories64, unique_count = load_data()
