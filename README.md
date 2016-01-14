@@ -41,7 +41,7 @@ The number of pixels that fall into a each HSV bin give a quantitative way of de
 
 ![Image](/images_for_project_overview/HSV_greener_usedincomplat_40.35530,long_-103.434_W .jpeg) ![Image](/images_for_project_overview/HSV_redder_usedincomp_lat_39.47983,long_-104.558_S.jpeg)
 
-Pixels from the image on the left (circles) and on the right (diamonds) are plotted below in HSV color space. This isn't exactly the HSV histogram described above (for which the bin counts would be difficult to visualize), but it gives us a sense of the color distribution in HSV space. The sky portion of each image is very similar, filling out the blue region of the HSV space, but the green and red ground colors occupy distinctly different regions in the cylinder. 
+Pixels from the image on the left (circles) and on the right (diamonds) are plotted below in HSV color space. This isn't exactly the HSV histogram described above (for which the bin counts would be difficult to visualize), but it gives us a sense of the color distribution in HSV space. The sky portion of each image is very similar, filling out the blue region of the HSV space (the histogram bins in this portion of the cylinder would have similar counts), but the green and red ground colors occupy distinctly different regions in the cylinder. 
 
 ![Image](/images_for_project_overview/HSV_image_comparison.gif)
 
@@ -89,6 +89,8 @@ In the first example, the net correctly predicts Summit county, but neighboring 
 ![Image](/images_for_project_overview/county_model_v1.2_Jefferson_idx_156.png)
 ![Image](/images_for_project_overview/county_model_v1.2_Garfield_idx_202.png)
 ![Image](/images_for_project_overview/county_model_v1.2_El Paso_idx_166.png)
+
+A gallery of more test results is in the works. 
 
 ### iPhone Validation
 
