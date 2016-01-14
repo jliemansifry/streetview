@@ -113,8 +113,12 @@ def plot_shapefile(f, options='counties', more_options=None, cm='blues',
                         pc.set_hatch('//')
                         pc.set_edgecolor('w')
                 if county_name == df['county'][true_idx] and not local:
-                    pc.set_hatch('//')
-                    pc.set_edgecolor('w')
+                    if proba_idx > 60:
+                        pc.set_hatch('//')
+                        pc.set_edgecolor('w')
+                    else:
+                        pc.set_hatch('//')
+                        pc.set_edgecolor('k')
             else:
                 pc.set_color(random.choice(discrete_colormap))
         elif options == 'rocktypes':
@@ -175,8 +179,7 @@ def plot_shapefile(f, options='counties', more_options=None, cm='blues',
                         dpi=150)
         else:
             true_county = df['county'][true_idx]
-            plt.savefig('''model_testing/county_model_v1.2_
-                        {}_idx_{}.png'''.format(true_county, true_idx),
+            plt.savefig('''model_testing/county_model_v1.3_newtruecolors_{}_idx_{}.png'''.format(true_county, true_idx),
                         dpi=150)
     if show:
         plt.show()
