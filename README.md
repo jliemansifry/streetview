@@ -1,4 +1,4 @@
-# Google Street View Locaiton Predictor
+# Google Street View Location Predictor
 The emerging field of feature recognition in images is revolutionizing how well computers are able to understand the world around us. Inspired by [geoguessr](https://geoguessr.com/usa/play), my project uses Convolutional Neural Networks (CNN) to discern relevant features that correspond to geographic locations in Colorado. This type of modeling has applications for self-driving cars, where maintaining a keen sense of environment is vitally important. Distinguishing canyon roads from local streets and a clear day from a rainy one will be integral in making smarter autonomous vehicles.
 
 ## Table of Contents
@@ -41,7 +41,7 @@ The number of pixels that fall into a each HSV bin give a quantitative way of de
 
 ![Image](/images_for_project_overview/HSV_greener_usedincomplat_40.35530,long_-103.434_W .jpeg) ![Image](/images_for_project_overview/HSV_redder_usedincomp_lat_39.47983,long_-104.558_S.jpeg)
 
-Pixels from the image on the left (circles) and on the right (diamonds) are plotted below in HSV color space. This isn't exactly the HSV histogram described above (for which the bin counts would be difficult to visualize), but it gives us a sense of the color distribution in HSV space. The sky portion of each image is very similar, filling out the blue region of the HSV space, but the green and red ground colors occupy distinctly different regions in the cylinder. 
+Pixels from the image on the left (circles) and on the right (diamonds) are plotted below in HSV color space. This isn't exactly the HSV histogram described above (for which the bin counts would be difficult to visualize), but it gives us a sense of the color distribution in HSV space. The sky portion of each image is very similar, filling out the blue region of the HSV space (the histogram bins in this portion of the cylinder would have similar counts), but the green and red ground colors occupy distinctly different regions in the cylinder. 
 
 ![Image](/images_for_project_overview/HSV_image_comparison.gif)
 
@@ -89,6 +89,8 @@ In the first example, the net correctly predicts Summit county, but neighboring 
 ![Image](/images_for_project_overview/county_model_v1.2_Jefferson_idx_156.png)
 ![Image](/images_for_project_overview/county_model_v1.2_Garfield_idx_202.png)
 ![Image](/images_for_project_overview/county_model_v1.2_El Paso_idx_166.png)
+
+A gallery of more test results is in the works. 
 
 ### iPhone Validation
 
