@@ -1,12 +1,15 @@
 # Model Gallery
 Roughly 200 examples of how the model performed on the test set are visualized here, ordered by true county. Exploring the model predictions for a variety of input scenarios helps to give a sense of how the neural net is *thinking*, which otherwise would be impossible to gauge. By looking at how the net treats colors, textures, and features over many test set examples, it is possible to start to see what it has correlated with each county. 
 
-Some highlights: 
+### Some highlights: 
  * The net gets all of the [Rio Blanco](#rio-blanco) test images right, and is very confident, guessing effectively 100% in each case. 
  * The net gets nearly all of the [Routt](#routt) test images correct, even though there is a significant amount of variety in the input landscapes. The one that it misses, it guesses neighboring Moffat. 
  * The net correctly guesses [Denver](#denver)'s test images as being from Denver in two of three cases. On the miss, it is still in the correct general area of Colorado. 
  * The net gets all of the [Saguache](#saguache) landscapes correct, though to be fair, these images all look like they are from the same google street view drive on the same cloudy day. A perfect example of the danger of the net learning the lighting more effectively than the landscape. To combat this, I'd want to utilize data from a variety of seasons and weather conditions, but this is beyond the ability of google street view imagery. 
+### Some lowlights/other thoughts:
+ * Coming soon
 
+## List of Counties
  * [Adams](#adams)
  * [Arapahoe](#arapahoe)
  * [Baca](#baca)
