@@ -11,6 +11,7 @@ The emerging field of feature recognition in images is revolutionizing how well 
 3. [Convolutional Neural Networks](#convolutional-neural-networks)
   * [Training the Neural Nework](#training-the-neural-network)
   * [Results](#results)
+  * [Model Gallery](#model-gallery)
   * [iPhone Validation](#iphone-validation)
 4. [A Note From the Author](#a-note-from-the-author)
 
@@ -90,7 +91,8 @@ In the first example, the net correctly predicts Summit county, but neighboring 
 ![Image](/images_for_project_overview/county_model_v1.2_Garfield_idx_202.png)
 ![Image](/images_for_project_overview/county_model_v1.2_El Paso_idx_166.png)
 
-A gallery of more test results is in the works. 
+### Model Gallery
+See [here](/model_gallery.md) for more examples of how the net performed on a variety of input landscapes and counties. 
 
 ### iPhone Validation
 
