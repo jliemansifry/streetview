@@ -8,7 +8,7 @@ Roughly 200 examples of how the model performed on the test set are visualized h
  * The net gets all of the [Saguache](#saguache) landscapes correct, though to be fair, these images all look like they are from the same google street view drive on the same cloudy day. A perfect example of the danger of the net learning the lighting more effectively than the landscape. To combat this, I'd want to utilize data from a variety of seasons and weather conditions, but this is beyond the ability of google street view imagery. 
 
 ### Some lowlights/other thoughts:
- * The net, overall, performs well on the [Weld](#weld) county examples, but some bizarre trends emerge. The 8th and 9th images seem to have the same features, but offset in direction (the E/W images in 8 are like the N/S images in 9), and this completely changes the prediction of the net. This seems to say that the net does not have a high level of abstraction with regards to features coming from each cardinal direction-- if it finds specific patterns between features among the cardinal directions in the training set, it will only assign a high similarity if the test image has the same features in the same orientation. 
+ * The net, overall, performs well on the [Weld](#weld) county examples, but some bizarre trends emerge. The 1th and 2th images seem to have the same features, but offset in direction (the E/W images in 1 are like the N/S images in 2), and this completely changes the prediction of the net. This seems to say that the net does not have a high level of abstraction with regards to features coming from each cardinal direction-- if it finds specific patterns between features among the cardinal directions in the training set, it will only assign a high similarity if the test image has the same features in the same orientation. 
  * The net goes 0/6 for [Teller](#teller) county. For one of these, the net ascertains that it is in the top 5, but for the rest, it is off, although a county with a high predicted probability is neighboring in 3 of the 6 examples. Then again, these images *are* pretty generic Colorado. 
  * 0/3 in [Summit](#summit) county. I think the net was mostly trained with snowy images from Summit, so when it sees mountainous but not very snowy landscapes (as is the case in these three random test set examples), it doesn't guess here. 
  * Hit or miss in [Mesa](#mesa) county. Sometimes right on, sometimes right nextdoor (guessing Garfield to the north), and sometimes halfway across the state. 
@@ -274,6 +274,8 @@ Roughly 200 examples of how the model performed on the test set are visualized h
 ![Image](/model_gallery/county_model_v1.3_newtruecolors_Washington_idx_524.png)
 ![Image](/model_gallery/county_model_v1.3_newtruecolors_Washington_idx_594.png)
 ## Weld
+![Image](/model_gallery/county_model_v1.3_newtruecolors_Weld_idx_600.png)
+![Image](/model_gallery/county_model_v1.3_newtruecolors_Weld_idx_602.png)
 ![Image](/model_gallery/county_model_v1.3_newtruecolors_Weld_idx_526.png)
 ![Image](/model_gallery/county_model_v1.3_newtruecolors_Weld_idx_535.png)
 ![Image](/model_gallery/county_model_v1.3_newtruecolors_Weld_idx_561.png)
@@ -281,8 +283,6 @@ Roughly 200 examples of how the model performed on the test set are visualized h
 ![Image](/model_gallery/county_model_v1.3_newtruecolors_Weld_idx_578.png)
 ![Image](/model_gallery/county_model_v1.3_newtruecolors_Weld_idx_586.png)
 ![Image](/model_gallery/county_model_v1.3_newtruecolors_Weld_idx_591.png)
-![Image](/model_gallery/county_model_v1.3_newtruecolors_Weld_idx_600.png)
-![Image](/model_gallery/county_model_v1.3_newtruecolors_Weld_idx_602.png)
 ![Image](/model_gallery/county_model_v1.3_newtruecolors_Weld_idx_614.png)
 ![Image](/model_gallery/county_model_v1.3_newtruecolors_Weld_idx_620.png)
 ![Image](/model_gallery/county_model_v1.3_newtruecolors_Weld_idx_645.png)
