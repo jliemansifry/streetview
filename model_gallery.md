@@ -50,13 +50,13 @@ Roughly 200 examples of how the model performed on the test set are visualized h
  * [Prowers](#prowers)
  * [Pueblo](#pueblo)
  * [Rio Blanco](#rio-blanco)
+ * [Rio Grande](#rio-grande)
  * [Routt](#routt)
  * [Saguache](#saguache)
  * [Summit](#summit)
  * [Teller](#teller)
  * [Washington](#washington)
  * [Weld](#weld)
-
 
 ## Adams
 ![Image](/model_gallery/county_model_v1.3_newtruecolors_Adams_idx_525.png)
@@ -173,6 +173,8 @@ Roughly 200 examples of how the model performed on the test set are visualized h
 ![Image](/model_gallery/county_model_v1.3_newtruecolors_La Plata_idx_506.png)
 ![Image](/model_gallery/county_model_v1.3_newtruecolors_La Plata_idx_658.png)
 ![Image](/model_gallery/county_model_v1.3_newtruecolors_La Plata_idx_677.png)
+## Lake
+![Image](/model_gallery/county_model_v1.3_newtruecolors_Lake_idx_516.png)
 ## Larimer
 ![Image](/model_gallery/county_model_v1.3_newtruecolors_Larimer_idx_501.png)
 ![Image](/model_gallery/county_model_v1.3_newtruecolors_Larimer_idx_503.png)
@@ -243,6 +245,8 @@ Roughly 200 examples of how the model performed on the test set are visualized h
 ![Image](/model_gallery/county_model_v1.3_newtruecolors_Rio Blanco_idx_528.png)
 ![Image](/model_gallery/county_model_v1.3_newtruecolors_Rio Blanco_idx_529.png)
 ![Image](/model_gallery/county_model_v1.3_newtruecolors_Rio Blanco_idx_616.png)
+## Rio Grande
+![Image](/model_gallery/county_model_v1.3_newtruecolors_Rio Grande_idx_543.png)
 ## Routt
 ![Image](/model_gallery/county_model_v1.3_newtruecolors_Routt_idx_507.png)
 ![Image](/model_gallery/county_model_v1.3_newtruecolors_Routt_idx_519.png)
