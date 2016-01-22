@@ -17,7 +17,7 @@ The emerging field of feature recognition in images is revolutionizing how well 
 
 ## The Data
 
-15000 locations in Colorado, with google street view images facing North, South, East, and West (60000 total images). The gif below shows all of the locations plotted by Latitude/Longitude/Elevation. The structure of Colorado is quickly apparent; mountains to the West, a high density of roads along the Boulder-Denver-Colorado Springs corridor, and plains to the East.
+20000 locations in Colorado, with google street view images facing North, South, East, and West (80000 total images). The gif below shows all of the locations plotted by Latitude/Longitude/Elevation. The structure of Colorado is quickly apparent; mountains to the West, a high density of roads along the I-25 corridor, and plains to the East.
 
 ![Image](/images_for_project_overview/data_animation.gif)
 
